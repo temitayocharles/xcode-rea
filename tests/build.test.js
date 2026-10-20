@@ -81,6 +81,12 @@ test("all asset catalogs compile together with global icon and accent settings",
   assert.equal(args.filter((arg) => arg === "--compile").length, 1);
   assert.equal(args.filter((arg) => arg === "--output-partial-info-plist").length, 1);
   assert.ok(args[args.indexOf("--output-partial-info-plist") + 1].endsWith("AssetCatalogs_generated_info.plist"));
+  const mergeIndex = plan.steps.findIndex((step) => step.command.args[0] === "merge-asset-info-plist");
+  const compileIndex = plan.steps.indexOf(calls[0]);
+  const signIndex = plan.steps.findIndex((step) => step.kind === "sign");
+  assert.ok(mergeIndex > compileIndex, "actool must finish before metadata merge");
+  assert.ok(signIndex > mergeIndex, "metadata must be merged before code signing");
+  assert.equal(plan.steps[mergeIndex].command.args[1], calls[0].outputs[1]);
 });
 
 test("Swift language versions are normalized for swiftc, not in project settings", () => {
