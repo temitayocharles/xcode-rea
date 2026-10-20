@@ -4,7 +4,7 @@ A branch is releasable only when all four gates pass **on a fresh clone**. Gates
 1 and 2 run anywhere; gates 3 and 4 require macOS with Xcode installed.
 
 ```bash
-git clone https://github.com/temitayocharles/xcode-rea && cd xcode-rea
+git clone -b arena/20d2483d-xcode-rea https://github.com/temitayocharles/xcode-rea && cd xcode-rea
 npm test                                    # gate 1 + 2
 node scripts/macos-verify.mjs --project ~/Dev/App.xcodeproj --scheme App   # gates 3 + 4
 ```
@@ -54,10 +54,11 @@ build:
    `xcl -showBuildSettings` are compared key by key. Only deliberately ignored
    keys (DerivedData paths, toolchain version stamps, process environment) are
    allowed to differ. Missing settings and value mismatches both fail the gate.
-3. **build** — `xcl build` runs in an isolated `--derivedDataPath`.
+3. **build** — `xcl build` runs in a new unique directory beneath the
+   named `--derived-data` root; existing output is never recursively deleted.
 4. **product** — the resulting bundle has a valid `Info.plist`, passes
    `codesign --verify --deep --strict`, and contains an executable whose
-   architecture is reported by `lipo -archs`.
+   architecture matches the architecture in the build plan (checked via `lipo -archs`).
 
 ```bash
 node scripts/macos-verify.mjs \
@@ -70,8 +71,10 @@ node scripts/macos-verify.mjs \
 ```
 
 Exit codes: `0` all gates passed, `1` a gate failed, `2` precondition missing
-(not macOS, no project, wrong directory). Use `--skip-build` when you only want
-the comparison, and `--ignore-key NAME` for a setting that is expected to differ.
+(not macOS, no project, wrong directory). Use `--skip-build` when you only want the comparison (reported as
+`settings-only`, **not** full build certification). The output root must be
+named `.verify-derived-data`, `xcl-verify`, or `xcl-verify-*`. Use
+`--ignore-key NAME` for a setting that is expected to differ.
 
 The pure comparison rules live in `src/compat/diff.js` and are unit-tested on
 every platform, so a Linux CI job verifies the logic even though it cannot run
@@ -92,8 +95,10 @@ Not automated, because it depends on what the app does:
 
 ## What these gates do not prove
 
-- Gates 3–4 have not been executed in this repository's history on real Apple
-  hardware; they are only wired up and unit-tested for their logic.
+- A manual macOS/Xcode 27.1 run reached real Swift compilation and linking,
+  then failed on a separate preview asset-catalog invocation. The engine and
+  differential harness were corrected afterward, but a complete successful
+  macOS gate run has **not** yet been recorded.
 - One successful build does not imply compatibility for every product type,
   configuration or SDK. Treat each new project shape as unverified until it
   passes gate 3.
