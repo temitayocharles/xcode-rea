@@ -24,9 +24,8 @@ deliberately diverges. It is the reference for the claims in the README.
 The layer order is:
 
 ```text
-generic defaults
-platform + SDK DefaultProperties
-product-type defaults
+installed Xcode .xcspec DefaultValue baseline (if available)
+generic / SDK / platform / product-type computed defaults
 project xcconfig
 project build settings
 target xcconfig
@@ -63,8 +62,11 @@ Implementation details that match Xcode:
    (`xcl spec sync`, or automatic when Xcode is present and
    `XCL_SKIP_SPECS=1` is not set).
 
-That ordering means an installed Xcode can correct `xcl`'s assumptions without a
-code change. Parsed specs are cached in `~/Library/Caches/xcl/xcspec-*.json`
+Xcode specifications supply defaults for settings not otherwise computed, while
+project-specific, SDK-specific, product-type and template values override
+unscoped or blank spec placeholders. This prevents accidental loss of
+`ACTION`, `CONFIGURATION`, signing and build-directory settings.
+Parsed specs are cached in `~/Library/Caches/xcl/xcspec-*.json`
 (override with `XCL_CACHE_DIR`, disable with `XCL_NO_CACHE=1`), so the scan runs
 once per Xcode version rather than once per build. `XCL_SKIP_SPECS=1` is useful
 for reproducing built-in behaviour in tests or on machines with a partially
