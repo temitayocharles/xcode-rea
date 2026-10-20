@@ -116,7 +116,7 @@ function gate(name, fn) {
     return { name, status: "pass", ...detail };
   } catch (error) {
     process.stdout.write(`   FAIL ${error.message}\n`);
-    return { name, status: "fail", error: error.message, lines: error.lines ?? [] };
+    return { name, status: "fail", error: error.message, lines: error.lines ?? [], ...(error.detail ?? {}) };
   }
 }
 
@@ -165,7 +165,7 @@ function listGate(options, root) {
 function settingsFor(command, args, target, root) {
   const output = run(command, args, { cwd: root });
   const parsed = JSON.parse(output);
-  const entry = parsed.find((item) => item.target === target) ?? parsed[0];
+  const entry = parsed.find((item) => item.target === target);
   if (!entry) throw new Error(`no build settings returned for ${target}`);
   return entry.buildSettings;
 }
@@ -204,12 +204,17 @@ function settingsGate(options, root, targets) {
     differing: result.differing,
     unimplemented: result.unimplemented,
     coverage: result.coverage,
+    // Full structured differences are saved to the JSON artifact, while
+    // the human-readable summary remains bounded by compareSettings.limit.
+    differences: result.differences,
+    missingTargets: result.missingTargets,
   };
   if (!result.ok) {
     const error = new Error(
       `${result.differing} value mismatches, ${result.unimplemented} missing settings`,
     );
     error.lines = result.lines;
+    error.detail = detail;
     throw error;
   }
   return detail;
