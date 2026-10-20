@@ -51,6 +51,25 @@ test("ignored keys do not count as mismatches", () => {
   assert.equal(result.differing, 0);
 });
 
+test("excluded settings do not fail comparison when absent", () => {
+  const reference = map({ App: { OBJROOT: "/xcode/obj", PRODUCT_NAME: "App" } });
+  const actual = map({ App: { PRODUCT_NAME: "App" } });
+  const result = compareSettings(reference, actual);
+  assert.equal(result.ok, true);
+  assert.equal(result.unimplemented, 0);
+  assert.equal(result.compared, 1);
+  assert.equal(result.coverage, 100);
+});
+
+test("user-supplied ignored settings are excluded even when missing", () => {
+  const reference = map({ App: { OPTIONAL: "value", PRODUCT_NAME: "App" } });
+  const actual = map({ App: { PRODUCT_NAME: "App" } });
+  const result = compareSettings(reference, actual, { ignore: ignoredKeys(["OPTIONAL"]) });
+  assert.equal(result.ok, true);
+  assert.equal(result.unimplemented, 0);
+  assert.equal(result.compared, 1);
+});
+
 test("settings that xcl does not implement are counted, not ignored", () => {
   const reference = map({ App: { PRODUCT_NAME: "App", FUTURE_SETTING: "1" } });
   const result = compareSettings(reference, map({ App: { PRODUCT_NAME: "App" } }));
