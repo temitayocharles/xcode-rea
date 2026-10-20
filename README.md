@@ -310,7 +310,7 @@ silently disappearing from a commit.
 ## Development
 
 ```bash
-npm test                    # 85 tests, no dependencies, ~3 seconds
+npm test                    # 88 tests, no dependencies, ~3 seconds
 npm run demo                # list the fixture project
 npm run demo:settings       # resolve settings for the fixture
 npm run demo:plan           # print a build plan
