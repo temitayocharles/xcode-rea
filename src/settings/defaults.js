@@ -165,7 +165,7 @@ export function platformDefaults(context) {
   const standardArch = standardArchitectures(platform, hostArch);
 
   const defaults = {
-    SDKROOT: sdkRoot,
+    SDKROOT: sdk?.path ?? sdkRoot,
     PLATFORM_NAME: platform,
     EFFECTIVE_PLATFORM_NAME: effectivePlatformName(platform),
     SUPPORTED_PLATFORMS: SUPPORTED_PLATFORMS[platform] ?? platform,
