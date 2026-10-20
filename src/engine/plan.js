@@ -671,6 +671,7 @@ export function planTarget({
 
   // --- resources ---------------------------------------------------------
   const infoPlistFile = resolveProjectFile(settings.INFOPLIST_FILE ?? "", settings);
+  let assetInfoPartial = "";
   if (isWrapper && productInfo.infoplistPath) {
     const assetCatalogSources = [];
     const resourceEntries = project.resources(target.id);
@@ -744,6 +745,7 @@ export function planTarget({
     const catalogs = [...new Set(assetCatalogSources)];
     if (catalogs.length > 0) {
       const partial = join(targetTempDir, "AssetCatalogs_generated_info.plist");
+      assetInfoPartial = partial;
       const args = [
         "actool",
         ...catalogs,
@@ -823,6 +825,22 @@ export function planTarget({
         }),
       );
     }
+  }
+
+  // Merge actool's icon metadata into the final Info.plist before signing.
+  // actool's com.apple.actool.* diagnostics are deliberately excluded.
+  if (assetInfoPartial) {
+    steps.push(
+      makeStep({
+        kind: "bundle",
+        title: "Merge asset catalog Info.plist",
+        tool: "xcl-internal",
+        args: ["merge-asset-info-plist", assetInfoPartial, infoPlistPath],
+        inputs: [assetInfoPartial, infoPlistPath],
+        outputs: [infoPlistPath],
+        description: "asset-generated icon metadata",
+      }),
+    );
   }
 
   // --- copy files --------------------------------------------------------
