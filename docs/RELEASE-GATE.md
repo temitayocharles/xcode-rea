@@ -70,6 +70,12 @@ node scripts/macos-verify.mjs \
   --json /tmp/xcl-verify.json
 ```
 
+For a failed settings gate, the JSON report includes the compared/missing/differing
+counts and a complete `differences` array with target, key, and (for value
+mismatches) both values. Its `lines` summary is deliberately limited to
+avoid overwhelming the console. Review the report for local paths, identities,
+and other machine-specific details before sharing it or committing it.
+
 Exit codes: `0` all gates passed, `1` a gate failed, `2` precondition missing
 (not macOS, no project, wrong directory). Use `--skip-build` when you only want the comparison (reported as
 `settings-only`, **not** full build certification). The output root must be
