@@ -95,6 +95,22 @@ test("report length is bounded by the limit", () => {
   assert.equal(result.unimplemented, 40);
 });
 
+test("structured differences preserve all missing and mismatched keys beyond summary limits", () => {
+  const result = compareSettings(
+    map({ App: { A: "1", B: "2", C: "3" } }),
+    map({ App: { A: "wrong", C: "3" } }),
+    { limit: 1 },
+  );
+  assert.equal(result.ok, false);
+  assert.equal(result.lines.length, 2);
+  assert.deepEqual(result.differences, [
+    { target: "App", key: "A", kind: "different", xcl: "wrong", xcodebuild: "1" },
+    { target: "App", key: "B", kind: "missing" },
+  ]);
+  assert.equal(result.differing, 1);
+  assert.equal(result.unimplemented, 1);
+});
+
 test("extra keys ignored by the caller are accepted", () => {
   const reference = map({ App: { PRODUCT_NAME: "App" } });
   const actual = map({ App: { PRODUCT_NAME: "App" } });
