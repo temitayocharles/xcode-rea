@@ -74,13 +74,15 @@ export function compareSettings(reference, actual, options = {}) {
   for (const [target, expected] of reference) {
     const received = actual.get(target) ?? {};
     for (const [key, value] of Object.entries(expected)) {
+      // Ignored keys are excluded whether their values differ OR xcl does not
+      // implement them. Otherwise a deliberate ignore still fails as missing.
+      if (ignore.has(key)) continue;
       compared += 1;
       if (!(key in received)) {
         unimplemented += 1;
         if (unimplemented <= limit) lines.push(`${target}: missing setting ${key}`);
         continue;
       }
-      if (ignore.has(key)) continue;
       if (String(received[key]) !== String(value)) {
         differing += 1;
         if (differing <= limit) {
