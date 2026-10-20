@@ -392,49 +392,14 @@ export function resolveBuildSettings(options) {
     applyLayer(accumulator, layer, context);
   };
 
+  // Xcode specification DefaultValue declarations are baseline defaults, not
+  // higher-priority overrides. They can originate from multiple compiler and
+  // product specs, including blank placeholders. Target-aware template, SDK,
+  // platform and computed defaults supersede that baseline; project and CLI
+  // settings still supersede both. Applying specs AFTER computed defaults was
+  // responsible for empty ACTION/ARCHS, incorrect paths and signing values.
+  if (specDefaults) pushLayer("xcode-spec-defaults", specDefaults);
   pushLayer("defaults", defaults);
-  if (specDefaults) {
-    pushLayer("xcode-spec-defaults", specDefaults);
-
-    // .xcspec files from different Xcode components can declare generic or
-    // empty defaults for settings that the active build context must compute.
-    // Restore those computed values, while retaining authoritative spec
-    // defaults for ordinary compiler options not in this contextual set.
-    const contextualKeys = [
-      "ACTION", "CONFIGURATION", "BUILD_DIR", "BUILD_ROOT",
-      "BUILT_PRODUCTS_DIR", "CONFIGURATION_BUILD_DIR",
-      "SYMROOT", "OBJROOT", "CONFIGURATION_TEMP_DIR", "TARGET_TEMP_DIR",
-      "TARGET_BUILD_DIR", "DERIVED_FILE_DIR", "DERIVED_FILES_DIR",
-      "SHARED_DERIVED_FILE_DIR", "MODULE_CACHE_DIR",
-      "PROJECT_DIR", "SRCROOT", "SOURCE_ROOT", "PROJECT_FILE_PATH",
-      "PROJECT_NAME", "TARGET_NAME", "TARGETNAME", "PRODUCT_NAME",
-      "PRODUCT_MODULE_NAME", "SWIFT_MODULE_NAME", "FULL_PRODUCT_NAME",
-      "WRAPPER_NAME", "WRAPPER_EXTENSION", "EXECUTABLE_PREFIX",
-      "EXECUTABLE_EXTENSION", "EXECUTABLE_NAME", "EXECUTABLE_PATH",
-      "INFOPLIST_PATH", "PRODUCT_TYPE", "PRODUCT_BUNDLE_PACKAGE_TYPE",
-      "MACH_O_TYPE", "SKIP_INSTALL", "ARCHS", "CURRENT_ARCH", "HOST_ARCH",
-      "DEVELOPER_DIR", "TOOLCHAIN_DIR", "PLATFORM_NAME", "SDKROOT",
-      "SDK_NAME", "SDK_VERSION", "SDK_DIR", "DEPLOYMENT_TARGET",
-      "MINIMUM_DEPLOYMENT_TARGET", "SUPPORTED_PLATFORMS",
-      "CODE_SIGNING_ALLOWED", "CODE_SIGNING_REQUIRED",
-      "CODE_SIGN_IDENTITY", "EXPANDED_CODE_SIGN_IDENTITY",
-      "CONTENTS_FOLDER_PATH", "UNLOCALIZED_RESOURCES_FOLDER_PATH",
-      "FRAMEWORKS_FOLDER_PATH", "PLUGINS_FOLDER_PATH",
-      "SHARED_FRAMEWORKS_FOLDER_PATH",
-      "XCODE_VERSION", "XCODE_VERSION_MAJOR", "XCODE_VERSION_MINOR",
-      "XCODE_VERSION_ACTUAL", "XCODE_BUILD", "XCODE_PRODUCT_BUILD_VERSION",
-      "PLATFORM_DIR", "PLATFORM_DEVELOPER_APPLICATIONS_DIR",
-      "PLATFORM_DEVELOPER_BIN_DIR", "PLATFORM_DEVELOPER_LIBRARY_DIR",
-      "PLATFORM_DEVELOPER_SDK_DIR", "PLATFORM_DEVELOPER_TOOLS_DIR",
-      "PLATFORM_DEVELOPER_USR_DIR", "DEVELOPER_APPLICATIONS_DIR",
-      "DEVELOPER_BIN_DIR", "DEVELOPER_FRAMEWORKS_DIR", "DEVELOPER_LIBRARY_DIR",
-      "DEVELOPER_SDK_DIR", "DEVELOPER_TOOLS_DIR", "DEVELOPER_USR_DIR",
-    ];
-    const contextual = Object.fromEntries(
-      contextualKeys.filter((key) => key in defaults).map((key) => [key, defaults[key]]),
-    );
-    pushLayer("contextual-defaults", contextual);
-  }
 
   const projectConfig = findConfiguration(project, project.projectConfigurations(), configuration);
   if (projectConfig) {
