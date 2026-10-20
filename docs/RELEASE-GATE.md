@@ -95,10 +95,15 @@ Not automated, because it depends on what the app does:
 
 ## What these gates do not prove
 
-- A manual macOS/Xcode 27.1 run reached real Swift compilation and linking,
-  then failed on a separate preview asset-catalog invocation. The engine and
-  differential harness were corrected afterward, but a complete successful
-  macOS gate run has **not** yet been recorded.
+- On macOS 27.0.1 / Xcode 27.1 the HelloXcode fixture **did** compile,
+  package and pass code-signing/arm64 verification with the corrected engine.
+  The project structure comparison also passed. The remaining differential
+  settings gate failed: **52 value differences and 895 missing occurrences
+  across two targets**. This is not yet full release certification.
+- Specification discovery was subsequently expanded to known Xcode
+  `Plug-ins` and SwiftBuild framework roots; the new discovery code is
+  unit-tested, but its effect on this machine's parity counts remains
+  unverified until a fresh hardware run.
 - One successful build does not imply compatibility for every product type,
   configuration or SDK. Treat each new project shape as unverified until it
   passes gate 3.
