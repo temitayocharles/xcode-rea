@@ -4,6 +4,27 @@ import { dirname } from "node:path";
 import { parsePlist, stringifyXmlPlist } from "../plist/index.js";
 import { generatedInfoPlist, expandPlistValue } from "./plan.js";
 
+function isDictionary(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+/** Keep generated icon keys, not actool's compilation diagnostics. */
+export function mergeAssetInfoPlists(base, generated) {
+  if (!isDictionary(base) || !isDictionary(generated)) {
+    throw new TypeError("asset Info.plist merge requires property-list dictionaries");
+  }
+  const merged = { ...base };
+  for (const [key, value] of Object.entries(generated)) {
+    if (key.startsWith("com.apple.actool.")) continue;
+    if (isDictionary(merged[key]) && isDictionary(value)) {
+      merged[key] = { ...merged[key], ...value };
+    } else {
+      merged[key] = value;
+    }
+  }
+  return merged;
+}
+
 export class BuildError extends Error {
   constructor(message, step, output = "") {
     super(message);
@@ -34,6 +55,13 @@ function runInternal(step, plan) {
       ensureDirectory(dirname(destination));
       writeFileSync(destination, stringifyXmlPlist(expanded));
       return { status: 0, stdout: `wrote ${destination}\n`, stderr: "" };
+    }
+    case "merge-asset-info-plist": {
+      const [source, destination] = args;
+      const base = parsePlist(readFileSync(destination));
+      const generated = parsePlist(readFileSync(source));
+      writeFileSync(destination, stringifyXmlPlist(mergeAssetInfoPlists(base, generated)));
+      return { status: 0, stdout: `merged ${source} into ${destination}\n`, stderr: "" };
     }
     case "write-pkginfo": {
       const destination = args[0];
