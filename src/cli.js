@@ -13,8 +13,8 @@ import {
 } from "./cli/context.js";
 import { loadXcodeSpecDefaults } from "./settings/spec.js";
 import { detectToolchain, listSdks } from "./settings/toolchain.js";
-import { planBuild } from "./build/plan.js";
-import { executePlan, summarizePlan } from "./build/execute.js";
+import { planBuild } from "./engine/plan.js";
+import { executePlan, summarizePlan } from "./engine/execute.js";
 import { sortObjectByKey } from "./util/output.js";
 import { runReaCommand } from "./rea/cli.js";
 import { runStudioCommand } from "./studio/server.js";

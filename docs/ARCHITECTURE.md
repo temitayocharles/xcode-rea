@@ -67,7 +67,7 @@ build path depends on a GUI, a daemon, or a native addon.
 - `resolver.js` — layered merge, condition matching, specificity, `$(inherited)`,
   recursive expansion and modifiers.
 
-### `src/build`
+### `src/engine`
 
 - `plan.js` — turns a target + settings into an ordered list of exec steps.
   Paths come from resolved settings (`EXECUTABLE_PATH`,

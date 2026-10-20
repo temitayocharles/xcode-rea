@@ -5,7 +5,7 @@ import { loadProjects, platformFromSdkName } from "../cli/context.js";
 import { detectToolchain, resolveSdk } from "../settings/toolchain.js";
 import { defaultDerivedDataPath } from "../settings/defaults.js";
 import { resolveBuildSettings } from "../settings/resolver.js";
-import { planTarget, expandPath } from "../build/plan.js";
+import { planTarget, expandPath } from "../engine/plan.js";
 import { sortObjectByKey } from "../util/output.js";
 
 const HTML = readFileSync(new URL("./index.html", import.meta.url), "utf8");

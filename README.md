@@ -21,11 +21,18 @@ node bin/xcl.mjs -project ~/Projects/Hello/Hello.xcodeproj -scheme Hello \
   -configuration Debug -sdk iphonesimulator build
 ```
 
-> Status: **0.1.0 — working prototype.** Project parsing, setting resolution,
-> dry-run planning and Swift/Objective-C app builds are implemented and tested.
+> Status: **0.1.0 — working prototype, unverified against real hardware.**
+>
+> Everything below is implemented and covered by the test suite, which runs
+> anywhere. It has **not** yet been exercised on a Mac: no build in this
+> repository has been executed by real `swiftc`/`clang`/`actool`, and no
+> differential run against a live `xcodebuild` has been recorded. The
+> [release gate](docs/RELEASE-GATE.md) defines exactly what must pass on macOS
+> before that claim can be made, and `scripts/macos-verify.mjs` runs it.
+>
 > Test execution, Swift Package resolution, archives/notarization and Interface
-> Builder *editing* are deliberately out of scope for this version. See
-> [What works](#what-works) and [Limitations](docs/COMPATIBILITY.md#known-divergences).
+> Builder *editing* are deliberately out of scope. See
+> [Known divergences](docs/COMPATIBILITY.md#known-divergences).
 
 ---
 
@@ -56,31 +63,37 @@ far more machinery than the task needs.
 
 ## What works
 
-| Area | Status |
-| --- | --- |
-| `project.pbxproj` parsing (objectVersion 46–77) | ✅ classic groups, file refs, build phases, dependencies |
-| Xcode 16 synchronized folders | ✅ including `membershipExceptions` and per-file compiler flags |
-| `.xcconfig` | ✅ `#include`, `#include?`, conditionals, `$(inherited)` |
-| Build-setting resolution | ✅ defaults → project xcconfig → project → target xcconfig → target → `-xcconfig` → CLI |
-| Conditional settings | ✅ `sdk`, `arch`, `config`, `platform`, `variant`, with Xcode's specificity rule |
-| SDK/platform discovery | ✅ `SDKSettings.plist`, `.xcspec` defaults, Xcode / CLT detection |
-| `-list`, `-list -json` | ✅ targets, configurations, schemes, workspace |
-| `-showBuildSettings`, `-json` | ✅ all targets, sorted, xcodebuild-shaped output |
-| Schemes and workspaces | ✅ shared/user schemes, container/group references |
-| Swift / Objective-C / C / C++ builds | ✅ `swiftc` and `clang` drivers |
-| Resources | ✅ asset catalogs (`actool`), storyboards/`xib` (`ibtool`), plists, strings, bundles |
-| Info.plist | ✅ process `INFOPLIST_FILE` or generate from `INFOPLIST_KEY_*` |
-| Product types | ✅ app, framework, static/dynamic library, tool, app extension, unit/UI test bundle |
-| Code signing | ✅ ad-hoc (`-`) signatures; entitlements are passed through |
-| Build plans / dry runs | ✅ every command is inspectable, no shell metacharacter surprises |
-| Local web UI | ✅ `xcl studio` — project tree, settings, command plan |
-| `xcodebuild` CLI aliases | ✅ `xcl xcodebuild -project … -scheme … build` |
-| Test execution / result bundles | ❌ builds test bundles, does not run XCTest |
-| Swift Package Manager resolution | ❌ planned; use `swift build` for packages |
-| Archive / export / notarization | ❌ planned |
-| Incremental & parallel builds | ❌ currently a deterministic full plan |
-| Interface Builder / asset editing | ❌ compiles existing files, never edits them |
-| Simulator install/launch | ❌ use `simctl` directly |
+Two independent things are recorded per row: whether the behaviour is
+**implemented** (code exists and is exercised by `npm test`) and whether it is
+**verified** (produced a working product on macOS via
+[`scripts/macos-verify.mjs`](scripts/macos-verify.mjs)). Verification is pending
+for every row until that gate is run and its report is committed.
+
+| Area | Implemented | Verified on macOS |
+| --- | --- | --- |
+| `project.pbxproj` parsing (objectVersion 46–77) | ✅ classic groups, file refs, build phases, dependencies | ⏳ |
+| Xcode 16 synchronized folders | ✅ including `membershipExceptions` and per-file compiler flags | ⏳ |
+| `.xcconfig` | ✅ `#include`, `#include?`, conditionals, `$(inherited)` | ⏳ |
+| Build-setting resolution | ✅ defaults → `.xcspec` → project xcconfig → project → target xcconfig → target → `-xcconfig` → CLI | ⏳ |
+| Conditional settings | ✅ `sdk`, `arch`, `config`, `platform`, `variant`, with Xcode's specificity rule | ⏳ |
+| SDK/platform discovery | ✅ `SDKSettings.plist`, `.xcspec` defaults, Xcode / CLT detection | ⏳ |
+| `-list`, `-list -json` | ✅ targets, configurations, schemes, workspace | ⏳ |
+| `-showBuildSettings`, `-json` | ✅ all targets, sorted, xcodebuild-shaped output | ⏳ |
+| Schemes and workspaces | ✅ shared/user schemes, container/group references | ⏳ |
+| Swift / Objective-C / C / C++ builds | ✅ `swiftc` and `clang` drivers | ⏳ |
+| Resources | ✅ asset catalogs (`actool`), storyboards/`xib` (`ibtool`), plists, strings, bundles | ⏳ |
+| Info.plist | ✅ process `INFOPLIST_FILE` or generate from `INFOPLIST_KEY_*` | ⏳ |
+| Product types | ✅ app, framework, static/dynamic library, tool, app extension, unit/UI test bundle | ⏳ |
+| Code signing | ✅ ad-hoc (`-`) signatures; entitlements are passed through | ⏳ |
+| Build plans / dry runs | ✅ every command is inspectable, no shell metacharacter surprises | ✅ (platform-independent) |
+| Local web UI | ✅ `xcl studio` — project tree, settings, command plan | ✅ (served and queried in CI) |
+| `xcodebuild` CLI aliases | ✅ `xcl xcodebuild -project … -scheme … build` | ⏳ |
+| Test execution / result bundles | ❌ builds test bundles, does not run XCTest | — |
+| Swift Package Manager resolution | ❌ planned; use `swift build` for packages | — |
+| Archive / export / notarization | ❌ planned | — |
+| Incremental & parallel builds | ❌ currently a deterministic full plan | — |
+| Interface Builder / asset editing | ❌ compiles existing files, never edits them | — |
+| Simulator install/launch | ❌ use `simctl` directly | — |
 
 ## Quick start
 
@@ -257,7 +270,7 @@ src/cli/                    argument parsing and project context
 src/plist/                  OpenStep, XML and binary plist parsers
 src/xcode/                  pbxproj, xcconfig, scheme and workspace models
 src/settings/               defaults, product types, toolchain, specs, resolver
-src/build/                  build planner and executor
+src/engine/                  build planner and executor
 src/rea/                    REA evidence plan and importer
 src/compat/                 coverage report
 src/studio/                 local web UI
@@ -265,10 +278,37 @@ tests/                      fixtures and node:test suite
 docs/                       compatibility notes and REA workflow
 ```
 
+## Verification status
+
+Claims here are deliberately split into two levels:
+
+- **Implemented** — the code exists and `npm test` exercises it.
+- **Verified** — the behaviour was reproduced against real Xcode for a real
+  project on macOS.
+
+Only the platform-independent rows are verified today. To close the gap on your
+Mac:
+
+```bash
+node scripts/macos-verify.mjs \
+  --project ~/Dev/App.xcodeproj \
+  --scheme App \
+  --json docs/verification/App-Debug-iphonesimulator.json
+```
+
+That command compares `-list` and every resolved build setting with
+`xcodebuild`, runs an actual `xcl build` in an isolated DerivedData directory,
+then checks the product is a valid, signed bundle with an executable of the
+expected architecture. It exits non-zero on any difference.
+
+See [docs/RELEASE-GATE.md](docs/RELEASE-GATE.md) for what each gate proves, what
+it does not, and the repository-integrity checks that keep source files from
+silently disappearing from a commit.
+
 ## Development
 
 ```bash
-npm test                    # 59 tests, no dependencies, ~2 seconds
+npm test                    # 74 tests, no dependencies, ~3 seconds
 npm run demo                # list the fixture project
 npm run demo:settings       # resolve settings for the fixture
 npm run demo:plan           # print a build plan

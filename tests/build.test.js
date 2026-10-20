@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { loadProject } from "../src/xcode/pbxproj.js";
 import { resolveBuildSettings } from "../src/settings/resolver.js";
-import { generatedInfoPlist, planTarget, orderTargets, resolveProjectFile } from "../src/build/plan.js";
+import { generatedInfoPlist, planTarget, orderTargets, resolveProjectFile } from "../src/engine/plan.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const fixture = (name) => join(here, "fixtures", name);

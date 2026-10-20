@@ -30,7 +30,7 @@ export {
   generatedInfoPlist,
   expandPath,
   resolveProjectFile,
-} from "./build/plan.js";
-export { executePlan, summarizePlan, BuildError } from "./build/execute.js";
+} from "./engine/plan.js";
+export { executePlan, summarizePlan, BuildError } from "./engine/execute.js";
 export { buildReaPlan } from "./rea/plan.js";
 export { extractEvidence, mergeEvidence } from "./rea/import.js";
