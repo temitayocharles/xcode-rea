@@ -21,15 +21,16 @@ node bin/xcl.mjs -project ~/Projects/Hello/Hello.xcodeproj -scheme Hello \
   -configuration Debug -sdk iphonesimulator build
 ```
 
-> Status: **0.1.0 — working prototype, full macOS release verification pending.**
+> Status: **0.1.0 — macOS build and signing verified, settings parity incomplete.**
 >
-> A manual run on macOS 27.0.1 / Xcode 27.1 successfully compiled and linked
-> the HelloXcode Swift sources, but then failed when the preview asset catalog
-> was compiled separately with global app-icon settings. Swift language-mode
-> normalization and combined asset compilation have since been corrected and
-> covered by cross-platform regression tests. **The corrected build has not yet
-> been rerun on macOS.** The complete differential and product verification
-> [release gate](docs/RELEASE-GATE.md) remains pending.
+> On macOS 27.0.1 / Xcode 27.1, a fresh-branch run on Apple Silicon passed the
+> repository's 79 tests and the macOS verification harness's project-structure,
+> real build, and signed product/architecture gates for the HelloXcode iOS
+> simulator fixture. The settings comparison **failed with 52 differing values
+> and 895 missing target-setting occurrences** across two targets. These are
+> not necessarily unique settings. A full compatibility/release claim is still
+> blocked on reconciliation against the installed Xcode. The
+> [release gate](docs/RELEASE-GATE.md) records these evidence boundaries.
 >
 > Test execution, Swift Package resolution, archives/notarization and Interface
 > Builder *editing* are deliberately out of scope. See
@@ -309,7 +310,7 @@ silently disappearing from a commit.
 ## Development
 
 ```bash
-npm test                    # 79 tests, no dependencies, ~3 seconds
+npm test                    # 80 tests, no dependencies, ~3 seconds
 npm run demo                # list the fixture project
 npm run demo:settings       # resolve settings for the fixture
 npm run demo:plan           # print a build plan
