@@ -149,8 +149,10 @@ Implemented wrapper layouts:
 
 ## Resources and bundles
 
-- Asset catalogs: `actool --compile … --platform … --minimum-deployment-target …
-  --app-icon … --accent-color …`, with one partial Info.plist per catalog.
+- Asset catalogs: one `actool` invocation receives all resource-phase
+  `.xcassets` catalogs, including previews, plus global app-icon/accent-color
+  settings; a single partial Info.plist is merged into the app's Info.plist
+  before signing.
 - Storyboards/xibs: `ibtool --compile`.
 - `.strings`/`.plist`: `plutil -convert binary1`.
 - Other resources: recursive copy preserving `.lproj` directories.
