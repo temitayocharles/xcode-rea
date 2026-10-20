@@ -301,8 +301,10 @@ export function genericDefaults(context) {
   const targetTemp = join(configurationTemp, `${target?.name ?? project.name}.build`);
   const productInfo = productTypeInfo(target?.productType ?? "");
   const productName = target?.productName ?? "$(TARGET_NAME)";
-  const debugConfiguration = /^debug$/i.test(configuration);
-  const archs = debugConfiguration ? arch : "$(ARCHS_STANDARD)";
+  // ARCHS is the requested architecture *set*, even when ONLY_ACTIVE_ARCH
+  // selects one architecture for the actual build. The planner's separate
+  // arch parameter determines the single-arch compile target.
+  const archs = "$(ARCHS_STANDARD)";
   const configurationDefaults = templateConfigurationDefaults(configuration);
 
   return {
