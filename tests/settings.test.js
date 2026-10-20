@@ -40,7 +40,7 @@ test("HelloXcode Debug simulator settings", () => {
     targetName: "HelloXcode",
   });
   assert.match(settings.BUILT_PRODUCTS_DIR, /DerivedData\/Build\/Products\/Debug-iphonesimulator$/);
-  assert.equal(settings.ARCHS, "arm64");
+  assert.equal(settings.ARCHS, "arm64 x86_64");
   assert.equal(settings.ONLY_ACTIVE_ARCH, "YES");
   assert.equal(settings.SWIFT_OPTIMIZATION_LEVEL, "-Onone");
   assert.equal(settings.ENABLE_TESTABILITY, "YES");
@@ -90,7 +90,8 @@ test("context-derived settings cannot be erased by unscoped Xcode spec defaults"
   assert.equal(settings.ARCHS_STANDARD, "arm64 x86_64");
   assert.equal(settings.DEAD_CODE_STRIPPING, "YES");
   assert.equal(settings.NEW_XCODE_OPTION, "spec-supported");
-  assert.ok(layers.some((layer) => layer.name === "contextual-defaults"));
+  assert.ok(layers.findIndex((layer) => layer.name === "xcode-spec-defaults") <
+    layers.findIndex((layer) => layer.name === "defaults"));
 });
 
 test("ONLY_ACTIVE_ARCH affects effective compile arch without reducing ARCHS in settings output", () => {
@@ -138,6 +139,39 @@ test("explicit user settings still supersede restored contextual defaults", () =
   assert.equal(settings.CODE_SIGNING_ALLOWED, "NO");
   assert.equal(settings.CONFIGURATION, "Debug");
   assert.equal(settings.CUSTOM_XCODE_SETTING, "override");
+});
+
+test("installed SDK and Xcode paths remain authoritative over spec placeholders", () => {
+  const project = loadProject(fixture("HelloXcode/HelloXcode.xcodeproj"));
+  const target = project.targetByName("HelloXcode");
+  const developerDir = "/Applications/Xcode.app/Contents/Developer";
+  const sdkPath = developerDir + "/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.1.sdk";
+  const { settings } = resolveBuildSettings({
+    project, target,
+    configuration: "Debug", platform: "iphonesimulator",
+    arch: "arm64", hostArch: "arm64",
+    derivedDataPath: "/tmp/xcl-location-parity",
+    developerDir,
+    sdk: {
+      name: "iphonesimulator27.1", version: "27.1", path: sdkPath,
+      root: "iphonesimulator", defaultProperties: {},
+    },
+    specDefaults: {
+      SDKROOT: "", SDK_NAME: "", SDK_DIR: "",
+      DEVELOPER_BIN_DIR: "", PLATFORM_DEVELOPER_SDK_DIR: "",
+      ARCHS_STANDARD: "arm64", CODE_SIGNING_ALLOWED: "NO",
+      GCC_VERSION: "xcl-spec-only",
+    },
+  });
+  assert.equal(settings.SDKROOT, sdkPath);
+  assert.equal(settings.SDK_NAME, "iphonesimulator27.1");
+  assert.equal(settings.SDK_DIR, sdkPath);
+  assert.equal(settings.DEVELOPER_BIN_DIR, developerDir + "/usr/bin");
+  assert.equal(settings.PLATFORM_DEVELOPER_SDK_DIR,
+    developerDir + "/Platforms/iPhoneSimulator.platform/Developer/SDKs");
+  assert.equal(settings.ARCHS, "arm64 x86_64");
+  assert.equal(settings.CODE_SIGNING_ALLOWED, "YES");
+  assert.equal(settings.GCC_VERSION, "xcl-spec-only");
 });
 
 test("HelloXcode Release settings", () => {
