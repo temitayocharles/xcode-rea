@@ -156,6 +156,8 @@ test("installed SDK and Xcode paths remain authoritative over spec placeholders"
       name: "iphonesimulator27.1", version: "27.1", path: sdkPath,
       root: "iphonesimulator", defaultProperties: {},
     },
+    // -sdk is a command-line selection and overrides the project's SDKROOT.
+    overrides: { SDKROOT: sdkPath },
     specDefaults: {
       SDKROOT: "", SDK_NAME: "", SDK_DIR: "",
       DEVELOPER_BIN_DIR: "", PLATFORM_DEVELOPER_SDK_DIR: "",
