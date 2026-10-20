@@ -98,13 +98,15 @@ function standardArchitectures(platform, hostArch) {
     case "iphoneos":
       return "arm64";
     case "iphonesimulator":
-      return hostArch === "arm64" ? "arm64" : "x86_64";
+      // Xcode's requested simulator architecture set is independent of which
+      // architecture ONLY_ACTIVE_ARCH selects for a particular build.
+      return "arm64 x86_64";
     case "macosx":
       return "arm64 x86_64";
     case "appletvos":
       return "arm64";
     case "appletvsimulator":
-      return hostArch === "arm64" ? "arm64" : "x86_64";
+      return "arm64 x86_64";
     case "watchos":
       return "arm64_32 arm64";
     case "watchsimulator":
@@ -159,6 +161,7 @@ export function platformDefaults(context) {
   const deploymentTarget =
     sdkDefaults[deploymentSetting] ?? MINIMUM_DEPLOYMENT_TARGET[platform] ?? "1.0";
   const platformDir = developerDir ? join(developerDir, "Platforms", `${PLATFORM_DIR_NAME[platform] ?? platform}.platform`) : "";
+  const platformDeveloperDir = platformDir ? join(platformDir, "Developer") : "";
   const standardArch = standardArchitectures(platform, hostArch);
 
   const defaults = {
@@ -188,7 +191,24 @@ export function platformDefaults(context) {
   } else {
     defaults.SDK_NAME = sdkRoot;
   }
-  if (platformDir) defaults.PLATFORM_DIR = platformDir;
+  if (platformDir) {
+    defaults.PLATFORM_DIR = platformDir;
+    defaults.PLATFORM_DEVELOPER_APPLICATIONS_DIR = join(platformDeveloperDir, "Applications");
+    defaults.PLATFORM_DEVELOPER_BIN_DIR = join(platformDeveloperDir, "usr", "bin");
+    defaults.PLATFORM_DEVELOPER_LIBRARY_DIR = join(platformDeveloperDir, "Library");
+    defaults.PLATFORM_DEVELOPER_SDK_DIR = join(platformDeveloperDir, "SDKs");
+    defaults.PLATFORM_DEVELOPER_TOOLS_DIR = join(platformDeveloperDir, "Tools");
+    defaults.PLATFORM_DEVELOPER_USR_DIR = join(platformDeveloperDir, "usr");
+  }
+  if (developerDir) {
+    defaults.DEVELOPER_APPLICATIONS_DIR = join(developerDir, "Applications");
+    defaults.DEVELOPER_BIN_DIR = join(developerDir, "usr", "bin");
+    defaults.DEVELOPER_FRAMEWORKS_DIR = join(developerDir, "Library", "Frameworks");
+    defaults.DEVELOPER_LIBRARY_DIR = join(developerDir, "Library");
+    defaults.DEVELOPER_SDK_DIR = join(developerDir, "SDKs");
+    defaults.DEVELOPER_TOOLS_DIR = join(developerDir, "Tools");
+    defaults.DEVELOPER_USR_DIR = join(developerDir, "usr");
+  }
 
   switch (platform) {
     case "iphoneos":
@@ -354,7 +374,7 @@ export function genericDefaults(context) {
     ...xcodeVersionSettings(xcodeVersion, xcodeBuild),
     TOOLCHAIN_DIR: developerDir ? join(developerDir, "Toolchains", "XcodeDefault.xctoolchain") : "",
     PLATFORM_NAME: platform,
-    SDKROOT: SDKROOT_NAME[platform] ?? platform,
+    SDKROOT: sdk?.path ?? SDKROOT_NAME[platform] ?? platform,
     SDK_NAME: sdk?.name ?? SDKROOT_NAME[platform] ?? platform,
     SDK_VERSION: sdk?.version ?? "",
     SDK_DIR: sdk?.path ?? "",
