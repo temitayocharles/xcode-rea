@@ -15,8 +15,16 @@ import { parsePlist } from "../plist/index.js";
 const SPEC_ROOTS = [
   ["Library", "Xcode", "Specifications"],
   ["Library", "Xcode", "PlugIns"],
+  // Apple tooling also uses the case-sensitive "Plug-ins" spelling.
+  ["Library", "Xcode", "Plug-ins", "XCBSpecifications.ideplugin", "Contents", "Resources"],
+  ["Library", "Xcode", "Plug-ins"],
   ["PlugIns", "XCBBuildService.bundle", "Contents", "PlugIns", "XCBSpecifications.ideplugin", "Contents", "Resources"],
   ["PlugIns", "XCBBuildService.bundle", "Contents", "Resources"],
+];
+
+const SHARED_FRAMEWORK_SPEC_PATH = [
+  "Versions", "A", "PlugIns", "XCBBuildService.bundle",
+  "Contents", "PlugIns", "XCBSpecifications.ideplugin", "Contents", "Resources",
 ];
 
 const PLATFORM_DIR_NAMES = {
@@ -34,6 +42,7 @@ const PLATFORM_DIR_NAMES = {
 const PLATFORM_SPEC_ROOTS = [
   ["Developer", "Library", "Xcode", "Specifications"],
   ["Developer", "Library", "Xcode", "PlugIns"],
+  ["Developer", "Library", "Xcode", "Plug-ins"],
   ["Developer", "Library", "Specifications"],
 ];
 
@@ -90,7 +99,7 @@ export function parseSpecFile(path) {
  * Returns `{ defaults, files, definitions, warnings }`.
  */
 const specCache = new Map();
-const CACHE_VERSION = 3;
+const CACHE_VERSION = 4;
 
 function diskCacheFile(cacheKey) {
   const root =
@@ -136,6 +145,17 @@ export function loadXcodeSpecDefaults({ developerDir, platforms = null } = {}) {
   if (developerDir) {
     for (const segments of SPEC_ROOTS) {
       walkSpecFiles(join(developerDir, ...segments), 0, files);
+    }
+    // swift-package-manager documents Xcode specifications both inside
+    // Developer/Library/Xcode/Plug-ins and in the SwiftBuild/XCBuild framework's
+    // XCBBuildService plugin. Walk the exact Resources directories rather than
+    // recursing through the entire Xcode.app bundle.
+    for (const framework of ["SwiftBuild.framework", "XCBuild.framework"]) {
+      walkSpecFiles(
+        join(developerDir, "..", "SharedFrameworks", framework, ...SHARED_FRAMEWORK_SPEC_PATH),
+        0,
+        files,
+      );
     }
     const platformRoot = join(developerDir, "Platforms");
     if (existsSync(platformRoot)) {
