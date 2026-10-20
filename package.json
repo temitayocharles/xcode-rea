@@ -25,7 +25,8 @@
     "test:watch": "node --test --watch tests/*.test.js",
     "demo": "node bin/xcl.mjs -project tests/fixtures/HelloXcode/HelloXcode.xcodeproj -list",
     "demo:settings": "node bin/xcl.mjs -project tests/fixtures/HelloXcode/HelloXcode.xcodeproj -target HelloXcode -configuration Debug -sdk iphonesimulator -showBuildSettings",
-    "demo:plan": "node bin/xcl.mjs -project tests/fixtures/HelloXcode/HelloXcode.xcodeproj -target HelloXcode -configuration Debug -sdk iphonesimulator build --dry-run"
+    "demo:plan": "node bin/xcl.mjs -project tests/fixtures/HelloXcode/HelloXcode.xcodeproj -target HelloXcode -configuration Debug -sdk iphonesimulator build --dry-run",
+    "certify:mac": "node scripts/certify-macos.mjs"
   },
   "keywords": [
     "xcode",
