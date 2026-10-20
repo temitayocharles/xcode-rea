@@ -277,7 +277,11 @@ export function buildEnvironment(parsed, context, { action = "build", cwd = proc
     : defaultDerivedDataPath(context.primaryProject.path);
 
   const overrides = { ...parsed.overrides };
-  if (explicitPlatform && sdk?.root) overrides.SDKROOT = sdk.root;
+  if (explicitPlatform && sdk?.root) {
+    // Xcode resolves SDKROOT to the selected SDK directory when installed.
+    // Retain the symbolic SDK name for offline/portable planning.
+    overrides.SDKROOT = sdk.path ?? sdk.root;
+  }
   if (parsed.get("arch")) overrides.ARCHS = arch;
 
   return {
