@@ -247,6 +247,7 @@ function templateConfigurationDefaults(configuration) {
     ? {
         ONLY_ACTIVE_ARCH: "YES",
         ENABLE_TESTABILITY: "YES",
+        DEAD_CODE_STRIPPING: "YES",
         DEBUG_INFORMATION_FORMAT: "dwarf",
         GCC_OPTIMIZATION_LEVEL: "0",
         GCC_PREPROCESSOR_DEFINITIONS: "$(inherited)",
@@ -260,6 +261,7 @@ function templateConfigurationDefaults(configuration) {
     : {
         ONLY_ACTIVE_ARCH: "NO",
         ENABLE_TESTABILITY: "NO",
+        DEAD_CODE_STRIPPING: "YES",
         DEBUG_INFORMATION_FORMAT: "dwarf-with-dsym",
         GCC_OPTIMIZATION_LEVEL: "s",
         GCC_PREPROCESSOR_DEFINITIONS: "$(inherited)",
