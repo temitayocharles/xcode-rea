@@ -174,6 +174,13 @@ function readSdkSettings(path) {
   }
 }
 
+/** CanonicalName can already include the version, e.g. iphonesimulator27.1. */
+export function sdkDisplayName(canonicalName, version) {
+  const canonical = String(canonicalName ?? "");
+  const v = String(version ?? "");
+  return !v || canonical.endsWith(v) ? canonical : `${canonical}${v}`;
+}
+
 /**
  * Resolve an SDK for a platform. `requested` may be a name (iphonesimulator),
  * a versioned name (iphonesimulator18.0), or an absolute path to an .sdk.
@@ -185,7 +192,7 @@ export function resolveSdk({ developerDir, platform, requested = null, sdkVersio
     return {
       path: requested,
       root: canonical,
-      name: settings?.Version ? `${canonical}${settings.Version}` : canonical,
+      name: sdkDisplayName(canonical, settings?.Version),
       version: settings?.Version ?? null,
       canonicalName: canonical,
       defaultProperties: settings?.DefaultProperties ?? {},
@@ -209,7 +216,7 @@ export function resolveSdk({ developerDir, platform, requested = null, sdkVersio
         root: canonical,
         canonicalName: canonical,
         version,
-        name: version ? `${canonical}${version}` : canonical,
+        name: sdkDisplayName(canonical, version),
         defaultProperties: settings?.DefaultProperties ?? {},
         settings,
       });
@@ -254,7 +261,7 @@ export function listSdks({ developerDir, platform }) {
       results.push({
         path,
         name: settings?.CanonicalName
-          ? `${settings.CanonicalName}${settings.Version ?? ""}`
+          ? sdkDisplayName(settings.CanonicalName, settings.Version)
           : name.replace(/\.sdk$/, ""),
         version: settings?.Version ?? null,
         canonicalName: settings?.CanonicalName ?? null,
