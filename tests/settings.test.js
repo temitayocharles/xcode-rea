@@ -80,7 +80,9 @@ test("context-derived settings cannot be erased by unscoped Xcode spec defaults"
   });
   assert.equal(settings.ACTION, "build");
   assert.equal(settings.CONFIGURATION, "Debug");
-  assert.equal(settings.ARCHS, "arm64");
+  // Xcode reports the requested multi-architecture set even though the
+  // build planner compiles only the effective active architecture.
+  assert.equal(settings.ARCHS, "arm64 x86_64");
   assert.equal(settings.CODE_SIGNING_ALLOWED, "YES");
   assert.equal(settings.CODE_SIGN_IDENTITY, "-");
   assert.equal(settings.CONTENTS_FOLDER_PATH, "HelloXcode.app");
@@ -89,6 +91,37 @@ test("context-derived settings cannot be erased by unscoped Xcode spec defaults"
   assert.equal(settings.DEAD_CODE_STRIPPING, "YES");
   assert.equal(settings.NEW_XCODE_OPTION, "spec-supported");
   assert.ok(layers.some((layer) => layer.name === "contextual-defaults"));
+});
+
+test("ONLY_ACTIVE_ARCH affects effective compile arch without reducing ARCHS in settings output", () => {
+  const project = loadProject(fixture("HelloXcode/HelloXcode.xcodeproj"));
+  const target = project.targetByName("HelloXcode");
+  const { settings } = resolveBuildSettings({
+    project,
+    target,
+    configuration: "Debug",
+    platform: "iphonesimulator",
+    arch: "arm64",
+    hostArch: "arm64",
+    derivedDataPath: "/tmp/xcl-DD",
+    developerDir: "/Developer",
+    specDefaults: { ARCHS_STANDARD: "arm64 x86_64" },
+  });
+  assert.equal(settings.ONLY_ACTIVE_ARCH, "YES");
+  assert.equal(settings.ARCHS, "arm64 x86_64");
+  const overridden = resolveBuildSettings({
+    project,
+    target,
+    configuration: "Debug",
+    platform: "iphonesimulator",
+    arch: "arm64",
+    hostArch: "arm64",
+    derivedDataPath: "/tmp/xcl-DD",
+    developerDir: "/Developer",
+    specDefaults: { ARCHS_STANDARD: "arm64 x86_64" },
+    overrides: { ARCHS: "arm64" },
+  });
+  assert.equal(overridden.settings.ARCHS, "arm64");
 });
 
 test("explicit user settings still supersede restored contextual defaults", () => {
