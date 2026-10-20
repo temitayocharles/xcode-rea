@@ -67,6 +67,7 @@ export function compareSettings(reference, actual, options = {}) {
 
   const missingTargets = [...reference.keys()].filter((name) => !actual.has(name));
   const lines = [];
+  const differences = [];
   let compared = 0;
   let unimplemented = 0;
   let differing = 0;
@@ -80,11 +81,16 @@ export function compareSettings(reference, actual, options = {}) {
       compared += 1;
       if (!(key in received)) {
         unimplemented += 1;
+        differences.push({ target, key, kind: "missing" });
         if (unimplemented <= limit) lines.push(`${target}: missing setting ${key}`);
         continue;
       }
       if (String(received[key]) !== String(value)) {
         differing += 1;
+        differences.push({
+          target, key, kind: "different",
+          xcl: String(received[key]), xcodebuild: String(value),
+        });
         if (differing <= limit) {
           lines.push(
             `${target}: ${key} xcl=${JSON.stringify(received[key])} xcodebuild=${JSON.stringify(value)}`,
@@ -103,5 +109,6 @@ export function compareSettings(reference, actual, options = {}) {
     differing,
     coverage,
     lines,
+    differences,
   };
 }
