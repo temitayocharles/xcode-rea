@@ -1,4 +1,4 @@
-import { basename, resolve, sep } from "node:path";
+import { basename, join, resolve, sep } from "node:path";
 
 /**
  * xcodebuild rejects -scheme together with -target. Differential settings
@@ -6,13 +6,23 @@ import { basename, resolve, sep } from "node:path";
  */
 export function referenceSettingsArgs(options, target) {
   if (!options.project || !target) throw new Error("project and target are required");
-  return [
+  // -derivedDataPath requires -scheme in xcodebuild; target-level queries
+  // cannot use it. Instead pin the two canonical build roots on BOTH sides
+  // of the differential test so path comparisons are meaningful.
+  const base = [
     "-project", options.project,
     "-target", target,
     "-configuration", options.configuration,
     "-sdk", options.sdk,
     "-showBuildSettings", "-json",
   ];
+  if (options.derivedData) {
+    base.push(
+      `SYMROOT=${join(options.derivedData, "Build", "Products")}`,
+      `OBJROOT=${join(options.derivedData, "Build", "Intermediates.noindex")}`,
+    );
+  }
+  return base;
 }
 
 /**
