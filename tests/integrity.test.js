@@ -211,12 +211,12 @@ test("the rendered plan for the fixture project is stable", () => {
   assert.equal(result.targets.length, 1);
   const summary = result.targets[0];
   assert.equal(summary.target, "HelloXcode");
-  assert.equal(summary.steps, 5);
+  assert.equal(summary.steps, 6);
   assert.deepEqual(summary.counts, {
     mkdir: 1,
     link: 1,
     resource: 1,
-    bundle: 1,
+    bundle: 2,
     sign: 1,
   });
 });
