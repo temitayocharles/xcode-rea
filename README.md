@@ -21,14 +21,15 @@ node bin/xcl.mjs -project ~/Projects/Hello/Hello.xcodeproj -scheme Hello \
   -configuration Debug -sdk iphonesimulator build
 ```
 
-> Status: **0.1.0 — working prototype, unverified against real hardware.**
+> Status: **0.1.0 — working prototype, full macOS release verification pending.**
 >
-> Everything below is implemented and covered by the test suite, which runs
-> anywhere. It has **not** yet been exercised on a Mac: no build in this
-> repository has been executed by real `swiftc`/`clang`/`actool`, and no
-> differential run against a live `xcodebuild` has been recorded. The
-> [release gate](docs/RELEASE-GATE.md) defines exactly what must pass on macOS
-> before that claim can be made, and `scripts/macos-verify.mjs` runs it.
+> A manual run on macOS 27.0.1 / Xcode 27.1 successfully compiled and linked
+> the HelloXcode Swift sources, but then failed when the preview asset catalog
+> was compiled separately with global app-icon settings. Swift language-mode
+> normalization and combined asset compilation have since been corrected and
+> covered by cross-platform regression tests. **The corrected build has not yet
+> been rerun on macOS.** The complete differential and product verification
+> [release gate](docs/RELEASE-GATE.md) remains pending.
 >
 > Test execution, Swift Package resolution, archives/notarization and Interface
 > Builder *editing* are deliberately out of scope. See
@@ -308,7 +309,7 @@ silently disappearing from a commit.
 ## Development
 
 ```bash
-npm test                    # 74 tests, no dependencies, ~3 seconds
+npm test                    # 79 tests, no dependencies, ~3 seconds
 npm run demo                # list the fixture project
 npm run demo:settings       # resolve settings for the fixture
 npm run demo:plan           # print a build plan
