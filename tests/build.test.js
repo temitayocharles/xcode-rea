@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { loadProject } from "../src/xcode/pbxproj.js";
 import { resolveBuildSettings } from "../src/settings/resolver.js";
-import { generatedInfoPlist, planTarget, orderTargets, resolveProjectFile } from "../src/engine/plan.js";
+import { generatedInfoPlist, planTarget, orderTargets, resolveProjectFile, swiftLanguageMode } from "../src/engine/plan.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const fixture = (name) => join(here, "fixtures", name);
@@ -49,7 +49,7 @@ test("HelloXcode plan contains compile, resources, plist and signing steps", () 
   const kinds = plan.steps.map((step) => step.kind);
   assert.ok(kinds.includes("mkdir"));
   assert.ok(kinds.includes("link"));
-  assert.equal(kinds.filter((kind) => kind === "resource").length, 2);
+  assert.equal(kinds.filter((kind) => kind === "resource").length, 1);
   assert.ok(kinds.includes("bundle"));
   assert.ok(kinds.includes("sign"));
 
@@ -66,12 +66,33 @@ test("HelloXcode plan contains compile, resources, plist and signing steps", () 
   assert.equal(plan.target.productPath, "/tmp/DerivedData/Build/Products/Debug-iphonesimulator/HelloXcode.app");
 });
 
-test("asset catalogs use unique partial Info.plist outputs", () => {
+test("all asset catalogs compile together with global icon and accent settings", () => {
   const { plan } = makePlan();
-  const actool = plan.steps.filter((step) => step.display.includes("actool"));
-  assert.equal(actool.length, 2);
-  const partials = actool.map((step) => step.command.args[step.command.args.indexOf("--output-partial-info-plist") + 1]);
-  assert.equal(new Set(partials).size, 2);
+  const calls = plan.steps.filter((step) => step.command.args[0] === "actool");
+  assert.equal(calls.length, 1);
+  const { args } = calls[0].command;
+  const catalogs = calls[0].inputs;
+  assert.equal(catalogs.length, 2);
+  assert.ok(catalogs.some((path) => path.endsWith("/Assets.xcassets")));
+  assert.ok(catalogs.some((path) => path.endsWith("/Preview Assets.xcassets")));
+  for (const path of catalogs) assert.ok(args.includes(path));
+  assert.equal(args[args.indexOf("--app-icon") + 1], "AppIcon");
+  assert.equal(args[args.indexOf("--accent-color") + 1], "AccentColor");
+  assert.equal(args.filter((arg) => arg === "--compile").length, 1);
+  assert.equal(args.filter((arg) => arg === "--output-partial-info-plist").length, 1);
+  assert.ok(args[args.indexOf("--output-partial-info-plist") + 1].endsWith("AssetCatalogs_generated_info.plist"));
+});
+
+test("Swift language versions are normalized for swiftc, not in project settings", () => {
+  assert.equal(swiftLanguageMode("4.0"), "4");
+  assert.equal(swiftLanguageMode("4.2"), "4.2");
+  assert.equal(swiftLanguageMode("5.0"), "5");
+  assert.equal(swiftLanguageMode("6.0"), "6");
+  assert.throws(() => swiftLanguageMode("5.9"), /Unsupported SWIFT_VERSION/);
+  const { plan, settings } = makePlan();
+  assert.equal(settings.SWIFT_VERSION, "5.0");
+  const link = plan.steps.find((step) => step.kind === "link");
+  assert.equal(link.command.args[link.command.args.indexOf("-swift-version") + 1], "5");
 });
 
 test("macOS plan places executable and resources in Contents", () => {
