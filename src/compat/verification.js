@@ -22,7 +22,7 @@ export function referenceSettingsArgs(options, target) {
 export function assertVerificationRoot(directory, repoRoot, project) {
   const root = resolve(directory);
   const base = basename(root);
-  if (base !== ".verify-derived-data" && !/^xcl-verify-[A-Za-z0-9_.-]+$/.test(base)) {
+  if (base !== ".verify-derived-data" && base !== "xcl-verify" && !/^xcl-verify-[A-Za-z0-9_.-]+$/.test(base)) {
     throw new Error("verification DerivedData must be named .verify-derived-data or xcl-verify-*");
   }
   const protectedPaths = [resolve(repoRoot), resolve(project)];
