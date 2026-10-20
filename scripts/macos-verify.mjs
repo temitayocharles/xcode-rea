@@ -17,10 +17,11 @@
  */
 
 import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { compareSettings, diffList, ignoredKeys } from "../src/compat/diff.js";
+import { assertVerificationRoot, referenceSettingsArgs } from "../src/compat/verification.js";
 
 
 
@@ -162,7 +163,7 @@ function listGate(options, root) {
 }
 
 function settingsFor(command, args, target, root) {
-  const output = run(command, [...args, "-target", target], { cwd: root });
+  const output = run(command, args, { cwd: root });
   const parsed = JSON.parse(output);
   const entry = parsed.find((item) => item.target === target) ?? parsed[0];
   if (!entry) throw new Error(`no build settings returned for ${target}`);
@@ -177,14 +178,19 @@ function settingsGate(options, root, targets) {
       target,
       settingsFor(
         "xcodebuild",
-        [...selection(options), "-configuration", options.configuration, "-sdk", options.sdk, "-showBuildSettings", "-json"],
+        referenceSettingsArgs(options, target),
         target,
         root,
       ),
     );
     actualByTarget.set(
       target,
-      settingsFor(process.execPath, xclArgs(options, ["-showBuildSettings", "--json"]), target, root),
+      settingsFor(
+        process.execPath,
+        xclArgs({ ...options, scheme: null }, ["-target", target, "-showBuildSettings", "--json"]),
+        target,
+        root,
+      ),
     );
   }
 
@@ -210,12 +216,14 @@ function settingsGate(options, root, targets) {
 }
 
 function buildGate(options, root) {
-  if (existsSync(options.derivedData)) rmSync(options.derivedData, { recursive: true, force: true });
+  // Every run gets its own directory. Never delete caller-provided DerivedData.
   mkdirSync(options.derivedData, { recursive: true });
+  const runDerivedData = mkdtempSync(join(options.derivedData, "run-"));
+  const buildOptions = { ...options, derivedData: runDerivedData };
 
   const result = spawnSync(
     process.execPath,
-    xclArgs(options, ["build"]),
+    xclArgs(buildOptions, ["build"]),
     { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], maxBuffer: 256 * 1024 * 1024 },
   );
   if (result.status !== 0) {
@@ -224,13 +232,13 @@ function buildGate(options, root) {
     throw error;
   }
 
-  const plan = JSON.parse(run(process.execPath, xclArgs(options, ["build", "--dry-run", "--json"]), { cwd: root }));
+  const plan = JSON.parse(run(process.execPath, xclArgs(buildOptions, ["build", "--dry-run", "--json"]), { cwd: root }));
   const products = plan.targets
     .map((target) => target.product)
     .filter((path) => path && existsSync(path));
   if (products.length === 0) throw new Error("build succeeded but no product was found on disk");
 
-  return { summary: products.join(", "), products };
+  return { summary: products.join(", "), products, arch: plan.arch, derivedData: runDerivedData };
 }
 
 function productGate(options, build) {
@@ -269,6 +277,9 @@ function productGate(options, build) {
 
     const arches = run("lipo", ["-archs", executable]).trim();
     if (!arches) throw new Error(`could not determine architecture of ${executable}`);
+    if (!build.arch || !arches.split(/\s+/).includes(build.arch)) {
+      throw new Error(`unexpected architecture in ${executable}: expected ${build.arch}, got ${arches}`);
+    }
     lines.push(`${name}: ${arches}`);
   }
   return { summary: "signed bundle with expected architecture", lines };
@@ -291,6 +302,12 @@ function main() {
   }
   if (!existsSync(options.project)) {
     process.stderr.write(`project not found: ${options.project}\n`);
+    process.exit(2);
+  }
+  try {
+    options.derivedData = assertVerificationRoot(options.derivedData, root, options.project);
+  } catch (error) {
+    process.stderr.write(`${error.message}\n`);
     process.exit(2);
   }
 
@@ -332,10 +349,12 @@ function main() {
     configuration: options.configuration,
     sdk: options.sdk,
     gates,
+    verificationLevel: options.skipBuild ? "settings-only" : "full-build",
     status: failed.length === 0 ? "pass" : "fail",
   };
 
   if (options.json) {
+    mkdirSync(dirname(options.json), { recursive: true });
     writeFileSync(options.json, `${JSON.stringify(report, null, 2)}\n`);
     process.stdout.write(`\nreport: ${options.json}\n`);
   }
