@@ -5,9 +5,14 @@ A branch is releasable only when all four gates pass **on a fresh clone**. Gates
 
 ```bash
 git clone -b arena/20d2483d-xcode-rea https://github.com/temitayocharles/xcode-rea && cd xcode-rea
-npm test                                    # gate 1 + 2
-node scripts/macos-verify.mjs --project ~/Dev/App.xcodeproj --scheme App   # gates 3 + 4
+npm run certify:mac
 ```
+
+`certify:mac` runs all Node tests followed by the HelloXcode fixture's real
+macOS structural and settings comparison, application build, and signed product
+checks. It writes `docs/verification/macOS-final.json`; if settings differ,
+it prints a value-redacted categorization and returns nonzero. It never treats
+a successful build alone as full settings certification.
 
 ## Gate 1 — completeness
 
@@ -51,9 +56,11 @@ build:
 1. **structure** — `xcodebuild -list -json` and `xcl -list --json` produce the
    same targets, configurations and schemes.
 2. **settings** — for each target, `xcodebuild -showBuildSettings` and
-   `xcl -showBuildSettings` are compared key by key. Only deliberately ignored
-   keys (DerivedData paths, toolchain version stamps, process environment) are
-   allowed to differ. Missing settings and value mismatches both fail the gate.
+   `xcl -showBuildSettings` are compared key by key using matching product and
+   object roots. Target-only Xcode queries do not permit `-derivedDataPath`,
+   so `SYMROOT` and `OBJROOT` are set explicitly for the reference call.
+   Only deliberately ignored keys (known environment stamps, process
+   environment) are excluded. Missing and differing settings fail the gate.
 3. **build** — `xcl build` runs in a new unique directory beneath the
    named `--derived-data` root; existing output is never recursively deleted.
 4. **product** — the resulting bundle has a valid `Info.plist`, passes
