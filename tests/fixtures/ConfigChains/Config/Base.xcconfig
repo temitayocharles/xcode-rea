@@ -1,0 +1,2 @@
+#include? "DoesNotExist.xcconfig"
+OTHER_LDFLAGS = $(inherited) -lz

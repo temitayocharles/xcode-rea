@@ -1,0 +1,5 @@
+#include "Base.xcconfig"
+OTHER_LDFLAGS[sdk=iphonesimulator*] = $(inherited) -lsim
+OTHER_LDFLAGS = $(inherited) -framework CoreLocation
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG $(inherited)
+PRODUCT_BUNDLE_IDENTIFIER = com.example.$(PRODUCT_NAME:rfc1034identifier)

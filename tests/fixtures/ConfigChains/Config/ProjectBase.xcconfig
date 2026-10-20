@@ -1,0 +1,3 @@
+#include "Shared.xcconfig"
+PRODUCT_BUNDLE_IDENTIFIER = com.example.projectbase
+PROJECT_LEVEL_MARKER = project-xcconfig

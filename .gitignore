@@ -1,0 +1,12 @@
+node_modules/
+DerivedData/
+build/
+dist/
+coverage/
+*.log
+.DS_Store
+
+# Generated from the local Xcode installation and REA runs.
+evidence/
+compat/evidence*.json
+compat/xcode-spec-defaults.json
