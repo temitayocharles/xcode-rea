@@ -20,6 +20,12 @@ test("macOS settings comparison selects a target without mixing it with a scheme
   ]);
   assert.ok(!args.includes("-scheme"));
   assert.throws(() => referenceSettingsArgs(options, ""), /project and target are required/);
+  const aligned = referenceSettingsArgs({ ...options, derivedData: "/tmp/xcl-verify" }, "Hello");
+  assert.deepEqual(aligned.slice(-2), [
+    "SYMROOT=/tmp/xcl-verify/Build/Products",
+    "OBJROOT=/tmp/xcl-verify/Build/Intermediates.noindex",
+  ]);
+  assert.ok(!aligned.includes("-derivedDataPath"));
 });
 
 test("macOS verification uses disposable output roots and refuses dangerous paths", () => {
