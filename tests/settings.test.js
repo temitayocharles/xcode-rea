@@ -57,6 +57,56 @@ test("HelloXcode Debug simulator settings", () => {
   assert.equal(settings.EFFECTIVE_PLATFORM_NAME, "-iphonesimulator");
 });
 
+test("context-derived settings cannot be erased by unscoped Xcode spec defaults", () => {
+  const project = loadProject(fixture("HelloXcode/HelloXcode.xcodeproj"));
+  const target = project.targetByName("HelloXcode");
+  const { settings, layers } = resolveBuildSettings({
+    project,
+    target,
+    configuration: "Debug",
+    platform: "iphonesimulator",
+    sdk: { name: "iphonesimulator27.1", version: "27.1", path: "/SDK/iPhoneSimulator.sdk", root: "iphonesimulator", defaultProperties: {} },
+    arch: "arm64",
+    hostArch: "arm64",
+    derivedDataPath: "/tmp/xcl-context-DD",
+    developerDir: "/Applications/Xcode.app/Contents/Developer",
+    action: "build",
+    specDefaults: {
+      ACTION: "", CONFIGURATION: "", ARCHS: "", BUILT_PRODUCTS_DIR: "build",
+      CONTENTS_FOLDER_PATH: "", CODE_SIGNING_ALLOWED: "NO", CODE_SIGN_IDENTITY: "",
+      ARCHS_STANDARD: "arm64 x86_64", DEAD_CODE_STRIPPING: "YES",
+      NEW_XCODE_OPTION: "spec-supported",
+    },
+  });
+  assert.equal(settings.ACTION, "build");
+  assert.equal(settings.CONFIGURATION, "Debug");
+  assert.equal(settings.ARCHS, "arm64");
+  assert.equal(settings.CODE_SIGNING_ALLOWED, "YES");
+  assert.equal(settings.CODE_SIGN_IDENTITY, "-");
+  assert.equal(settings.CONTENTS_FOLDER_PATH, "HelloXcode.app");
+  assert.equal(settings.BUILT_PRODUCTS_DIR, "/tmp/xcl-context-DD/Build/Products/Debug-iphonesimulator");
+  assert.equal(settings.ARCHS_STANDARD, "arm64 x86_64");
+  assert.equal(settings.DEAD_CODE_STRIPPING, "YES");
+  assert.equal(settings.NEW_XCODE_OPTION, "spec-supported");
+  assert.ok(layers.some((layer) => layer.name === "contextual-defaults"));
+});
+
+test("explicit user settings still supersede restored contextual defaults", () => {
+  const project = loadProject(fixture("HelloXcode/HelloXcode.xcodeproj"));
+  const target = project.targetByName("HelloXcode");
+  const { settings } = resolveBuildSettings({
+    project, target, configuration: "Debug", platform: "iphonesimulator",
+    sdk: null, arch: "arm64", hostArch: "arm64",
+    derivedDataPath: "/tmp/xcl-override-DD",
+    developerDir: "/Developer",
+    specDefaults: { CODE_SIGNING_ALLOWED: "NO", CONFIGURATION: "" },
+    overrides: { CODE_SIGNING_ALLOWED: "NO", CUSTOM_XCODE_SETTING: "override" },
+  });
+  assert.equal(settings.CODE_SIGNING_ALLOWED, "NO");
+  assert.equal(settings.CONFIGURATION, "Debug");
+  assert.equal(settings.CUSTOM_XCODE_SETTING, "override");
+});
+
 test("HelloXcode Release settings", () => {
   const { settings } = settingsFor({
     projectPath: fixture("HelloXcode/HelloXcode.xcodeproj"),
