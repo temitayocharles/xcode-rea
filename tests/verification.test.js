@@ -33,6 +33,10 @@ test("macOS verification uses disposable output roots and refuses dangerous path
     assertVerificationRoot("/tmp/xcl-verify-abc", repo, project),
     resolve("/tmp/xcl-verify-abc"),
   );
+  assert.equal(
+    assertVerificationRoot("/tmp/xcl-verify", repo, project),
+    resolve("/tmp/xcl-verify"),
+  );
   assert.throws(() => assertVerificationRoot("/workspace", repo, project), /must be named/);
   assert.throws(() => assertVerificationRoot("/tmp/data", repo, project), /must be named/);
   assert.throws(
