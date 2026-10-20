@@ -275,13 +275,22 @@ function debugFlags(settings, target) {
   return flags;
 }
 
+export function swiftLanguageMode(value) {
+  const requested = String(value).trim();
+  const mode = requested.endsWith(".0") ? requested.slice(0, -2) : requested;
+  if (!["4", "4.2", "5", "6"].includes(mode)) {
+    throw new Error(`Unsupported SWIFT_VERSION ${JSON.stringify(requested)}; supported language modes: 4, 4.2, 5, 6`);
+  }
+  return mode;
+}
+
 function swiftArgs({ settings, target, sources, triple, sdkPath, executablePath, isBundle, frameworks }) {
   const args = sources.map((source) => expandPath(source.path, settings));
   const moduleName = getSetting(settings, "SWIFT_MODULE_NAME", settings.PRODUCT_MODULE_NAME || target.name);
   args.push("-module-name", moduleName);
   args.push("-target", triple);
   if (sdkPath) args.push("-sdk", sdkPath);
-  if (settings.SWIFT_VERSION) args.push("-swift-version", settings.SWIFT_VERSION);
+  if (settings.SWIFT_VERSION) args.push("-swift-version", swiftLanguageMode(settings.SWIFT_VERSION));
   if (settings.SWIFT_OPTIMIZATION_LEVEL) args.push(settings.SWIFT_OPTIMIZATION_LEVEL);
   args.push(...debugFlags(settings, target));
   if (getSetting(settings, "ENABLE_TESTABILITY", "NO") === "YES") args.push("-enable-testing");
@@ -398,18 +407,6 @@ function frameworkLinkArgs(frameworks, settings) {
     }
   }
   return args;
-}
-
-function partialPlistPath(targetTempDir, name, index, used) {
-  let stem = String(name).replace(/\.xcassets$/, "") || "assets";
-  let candidate = join(targetTempDir, `${stem}_generated_info.plist`);
-  let attempt = index;
-  while (used.has(candidate)) {
-    attempt += 1;
-    candidate = join(targetTempDir, `${stem}-${attempt}_generated_info.plist`);
-  }
-  used.add(candidate);
-  return candidate;
 }
 
 function resourceKind(path) {
@@ -675,9 +672,9 @@ export function planTarget({
   // --- resources ---------------------------------------------------------
   const infoPlistFile = resolveProjectFile(settings.INFOPLIST_FILE ?? "", settings);
   if (isWrapper && productInfo.infoplistPath) {
-    const partials = new Set();
+    const assetCatalogSources = [];
     const resourceEntries = project.resources(target.id);
-    resourceEntries.forEach((entry, index) => {
+    resourceEntries.forEach((entry) => {
       const source = expandPath(entry.path, settings);
       if (!source) return;
       if (infoPlistFile && source === infoPlistFile) return;
@@ -685,39 +682,7 @@ export function planTarget({
       const name = basename(source);
 
       if (kind === "assetcatalog") {
-        const partial = partialPlistPath(targetTempDir, name, index, partials);
-        const args = [
-          "actool",
-          source,
-          "--compile",
-          resourcesDir,
-          "--platform",
-          platform,
-          "--minimum-deployment-target",
-          String(effectiveDeploymentTarget),
-          "--output-partial-info-plist",
-          partial,
-          "--errors",
-          "--warnings",
-          "--notices",
-        ];
-        if (settings.ASSETCATALOG_COMPILER_APPICON_NAME) {
-          args.push("--app-icon", settings.ASSETCATALOG_COMPILER_APPICON_NAME);
-        }
-        if (settings.ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME) {
-          args.push("--accent-color", settings.ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME);
-        }
-        steps.push(
-          makeStep({
-            kind: "resource",
-            title: `Compile asset catalog ${name}`,
-            tool: "xcrun",
-            args,
-            inputs: [source],
-            outputs: [resourcesDir, partial],
-            description: "actool",
-          }),
-        );
+        assetCatalogSources.push(source);
         return;
       }
 
@@ -772,6 +737,46 @@ export function planTarget({
         }),
       );
     });
+
+    // actool must receive all catalogs together: global app-icon/accent names
+    // can be declared in one catalog while other catalogs contain previews.
+    // Separate invocations may fail and can overwrite a shared Assets.car.
+    const catalogs = [...new Set(assetCatalogSources)];
+    if (catalogs.length > 0) {
+      const partial = join(targetTempDir, "AssetCatalogs_generated_info.plist");
+      const args = [
+        "actool",
+        ...catalogs,
+        "--compile",
+        resourcesDir,
+        "--platform",
+        platform,
+        "--minimum-deployment-target",
+        String(effectiveDeploymentTarget),
+        "--output-partial-info-plist",
+        partial,
+        "--errors",
+        "--warnings",
+        "--notices",
+      ];
+      if (settings.ASSETCATALOG_COMPILER_APPICON_NAME) {
+        args.push("--app-icon", settings.ASSETCATALOG_COMPILER_APPICON_NAME);
+      }
+      if (settings.ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME) {
+        args.push("--accent-color", settings.ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME);
+      }
+      steps.push(
+        makeStep({
+          kind: "resource",
+          title: "Compile asset catalogs",
+          tool: "xcrun",
+          args,
+          inputs: catalogs,
+          outputs: [resourcesDir, partial],
+          description: "actool (all catalogs in one invocation)",
+        }),
+      );
+    }
   }
 
   // --- PkgInfo -----------------------------------------------------------
