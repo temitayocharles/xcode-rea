@@ -288,15 +288,20 @@ Claims here are deliberately split into two levels:
 - **Verified** — the behaviour was reproduced against real Xcode for a real
   project on macOS.
 
-Only the platform-independent rows are verified today. To close the gap on your
-Mac:
+An Apple Silicon Mac running Xcode 27.1 has successfully built, signed
+and passed architecture verification for the HelloXcode fixture. Full
+`-showBuildSettings` parity remains unverified. The fixture's last settings
+comparison recorded 240 value differences and 308 missing occurrences;
+later resolver and harness fixes have not been hardware-certified.
+
+For one complete Mac regression, build and differential check:
 
 ```bash
-node scripts/macos-verify.mjs \
-  --project ~/Dev/App.xcodeproj \
-  --scheme App \
-  --json docs/verification/App-Debug-iphonesimulator.json
+npm run certify:mac
 ```
+
+This writes `docs/verification/macOS-final.json`, prints a redacted grouped
+summary of unresolved settings, and exits nonzero unless **every** gate passes.
 
 That command compares `-list` and every resolved build setting with
 `xcodebuild`, runs an actual `xcl build` in an isolated DerivedData directory,
@@ -310,7 +315,7 @@ silently disappearing from a commit.
 ## Development
 
 ```bash
-npm test                    # 88 tests, no dependencies, ~3 seconds
+npm test                    # 91 tests, no dependencies, ~3 seconds
 npm run demo                # list the fixture project
 npm run demo:settings       # resolve settings for the fixture
 npm run demo:plan           # print a build plan
