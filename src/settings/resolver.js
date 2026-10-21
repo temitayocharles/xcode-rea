@@ -361,6 +361,7 @@ export function buildSettingContext({
 export function resolveBuildSettings(options) {
   const {
     project,
+    workspacePath = null,
     target = null,
     configuration,
     platform,
@@ -385,6 +386,7 @@ export function resolveBuildSettings(options) {
   const defaults = genericDefaults({
     project,
     projectPath: project.path,
+    workspacePath,
     target,
     configuration,
     platform,
