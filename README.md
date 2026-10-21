@@ -24,12 +24,12 @@ node bin/xcl.mjs -project ~/Projects/Hello/Hello.xcodeproj -scheme Hello \
 > Status: **0.1.0 — macOS build and signing verified, settings parity incomplete.**
 >
 > On macOS 27.0.1 / Xcode 27.1, the Apple Silicon HelloXcode fixture passed
-> **107/107 Node tests**, project structure, real simulator compilation, bundle
+> **112/112 Node tests**, project structure, real simulator compilation, bundle
 > signing, and arm64 architecture validation. The same hardware run still found
-> **45 value differences and 191 missing setting occurrences** across the app
+> **31 value differences and 189 missing setting occurrences** across the app
 > and test targets. These are occurrences, not unique setting keys. Subsequent
-> SDK-selection and per-user cache-path improvements pass **112 Node tests**,
-> but have not yet been hardware-certified.
+> installed platform/device metadata and macOS version derivation changes
+> pass **116 Node tests** but have not yet been hardware-certified.
 > See the [release gate](docs/RELEASE-GATE.md) for evidence boundaries.
 >
 > Test execution, Swift Package resolution, archives/notarization and Interface
@@ -290,11 +290,11 @@ Claims here are deliberately split into two levels:
 
 An Apple Silicon Mac running Xcode 27.1 has successfully built, signed,
 and passed architecture verification for the HelloXcode fixture. Its last
-full hardware certification reported **45 value differences and 191 missing
+full hardware certification reported **31 value differences and 189 missing
 setting occurrences** across the application and test targets. Full
-`-showBuildSettings` parity remains unverified. The newest changes select
-Apple's active SDK path with `xcrun` and derive Xcode cache roots from
-the executing macOS user's cache and Xcode build metadata. Those fixes
+`-showBuildSettings` parity remains unverified. Subsequent improvements
+derive `AVAILABLE_PLATFORMS`, `SYSROOT`, corresponding device SDKs and
+host macOS version/build keys from actual Apple installations. Those changes
 are unit-tested but have **not** yet been exercised on Mac hardware.
 
 For one complete Mac regression, build and differential check:
@@ -318,7 +318,7 @@ silently disappearing from a commit.
 ## Development
 
 ```bash
-npm test                    # 112 tests, no dependencies, ~3 seconds
+npm test                    # 116 tests, no dependencies, ~3 seconds
 npm run demo                # list the fixture project
 npm run demo:settings       # resolve settings for the fixture
 npm run demo:plan           # print a build plan
