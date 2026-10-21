@@ -92,7 +92,7 @@ export function redactSettingValue(value) {
         const tail = path.slice(path.indexOf(platformMatch[0]) + platformMatch[0].length);
         const parts = tail.split("/").filter(Boolean);
         if (parts.length > 0 && parts.length <= 8 &&
-            parts.every((part) => /^(?:Developer|SDKs|System|Library|Frameworks|PrivateFrameworks|[A-Za-z0-9.]+\\.sdk)$/.test(part))) {
+            parts.every((part) => /^(?:Developer|SDKs|System|Library|Frameworks|PrivateFrameworks|[A-Za-z0-9.]+\.sdk)$/.test(part))) {
           publicRelative = `;relative:${parts.join("/")}`;
         }
       }
