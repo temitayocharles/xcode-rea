@@ -38,6 +38,23 @@ function ensureDirectory(path) {
   mkdirSync(path, { recursive: true });
 }
 
+export function requiresBinaryInfoPlist(settings, platform = process.platform) {
+  return platform === "darwin" && settings?.INFOPLIST_OUTPUT_FORMAT === "binary";
+}
+
+function finalizeInfoPlist(path, settings) {
+  if (!requiresBinaryInfoPlist(settings)) return;
+  // Preserve Xcode's binary property-list output setting in the actual signed
+  // bundle, not just in -showBuildSettings. plutil rewrites the given file.
+  const result = spawnSync("plutil", ["-convert", "binary1", path], {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  if (result.error || result.status !== 0) {
+    throw new Error(`plutil failed to convert ${path}: ${result.error?.message ?? result.stderr ?? "unknown error"}`);
+  }
+}
+
 function runInternal(step, plan) {
   const [command, ...args] = step.command.args;
   switch (command) {
@@ -46,6 +63,7 @@ function runInternal(step, plan) {
       ensureDirectory(dirname(targetPath));
       const info = generatedInfoPlist(plan.settings, { name: plan.target.name }, plan.platform);
       writeFileSync(targetPath, stringifyXmlPlist(info));
+      finalizeInfoPlist(targetPath, plan.settings);
       return { status: 0, stdout: `wrote ${targetPath}\n`, stderr: "" };
     }
     case "process-info-plist": {
@@ -54,6 +72,7 @@ function runInternal(step, plan) {
       const expanded = expandPlistValue(value, plan.settings);
       ensureDirectory(dirname(destination));
       writeFileSync(destination, stringifyXmlPlist(expanded));
+      finalizeInfoPlist(destination, plan.settings);
       return { status: 0, stdout: `wrote ${destination}\n`, stderr: "" };
     }
     case "merge-asset-info-plist": {
@@ -61,6 +80,7 @@ function runInternal(step, plan) {
       const base = parsePlist(readFileSync(destination));
       const generated = parsePlist(readFileSync(source));
       writeFileSync(destination, stringifyXmlPlist(mergeAssetInfoPlists(base, generated)));
+      finalizeInfoPlist(destination, plan.settings);
       return { status: 0, stdout: `merged ${source} into ${destination}\n`, stderr: "" };
     }
     case "write-pkginfo": {
