@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { loadProject } from "../src/xcode/pbxproj.js";
 import { expandSettings, matchConditions, resolveBuildSettings } from "../src/settings/resolver.js";
-import { genericDefaults, defaultDerivedDataPath } from "../src/settings/defaults.js";
+import { genericDefaults, defaultDerivedDataPath, sdkVersionSettings } from "../src/settings/defaults.js";
 import { productTypeInfo } from "../src/settings/productTypes.js";
 import { parsePlist } from "../src/plist/index.js";
 
@@ -34,6 +34,20 @@ function settingsFor({ projectPath, targetName, configuration = "Debug", platfor
   });
 }
 
+test("SDK version numbers follow Xcode's major-minor-patch format", () => {
+  assert.deepEqual(sdkVersionSettings("27.1"), {
+    SDK_VERSION_ACTUAL: "270100",
+    SDK_VERSION_MAJOR: "270000",
+    SDK_VERSION_MINOR: "100",
+  });
+  assert.deepEqual(sdkVersionSettings("17.2.1"), {
+    SDK_VERSION_ACTUAL: "170201",
+    SDK_VERSION_MAJOR: "170000",
+    SDK_VERSION_MINOR: "201",
+  });
+  assert.deepEqual(sdkVersionSettings("unknown"), {});
+});
+
 test("HelloXcode Debug simulator settings", () => {
   const { settings } = settingsFor({
     projectPath: fixture("HelloXcode/HelloXcode.xcodeproj"),
@@ -44,6 +58,13 @@ test("HelloXcode Debug simulator settings", () => {
   assert.equal(settings.DERIVED_FILE_DIR,
     "/tmp/DerivedData/Build/Intermediates.noindex/HelloXcode.build/Debug-iphonesimulator/HelloXcode.build/DerivedSources");
   assert.equal(settings.DERIVED_FILES_DIR, settings.DERIVED_FILE_DIR);
+  assert.equal(settings.SHARED_DERIVED_FILE_DIR, settings.BUILT_PRODUCTS_DIR + "/DerivedSources");
+  assert.equal(settings.SDK_VERSION_ACTUAL, "180000");
+  assert.equal(settings.SDK_VERSION_MAJOR, "180000");
+  assert.equal(settings.SDK_VERSION_MINOR, "0");
+  assert.equal(settings.SDK_DIR_iphonesimulator, "/SDK/iphonesimulator.sdk");
+  assert.equal(settings.PLATFORM_DISPLAY_NAME, "iOS Simulator");
+  assert.equal(settings.PLATFORM_FAMILY_NAME, "iOS");
   assert.equal(settings.DERIVED_SOURCES_DIR, settings.DERIVED_FILE_DIR);
   assert.ok(settings.OBJECT_FILE_DIR_normal.endsWith("/HelloXcode.build/Objects-normal"));
   assert.ok(settings.FIXED_FILES_DIR.endsWith("/HelloXcode.build/FixedFiles"));
