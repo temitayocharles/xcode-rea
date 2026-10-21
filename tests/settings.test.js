@@ -38,12 +38,12 @@ test("SDK version numbers follow Xcode's major-minor-patch format", () => {
   assert.deepEqual(sdkVersionSettings("27.1"), {
     SDK_VERSION_ACTUAL: "270100",
     SDK_VERSION_MAJOR: "270000",
-    SDK_VERSION_MINOR: "100",
+    SDK_VERSION_MINOR: "270100",
   });
   assert.deepEqual(sdkVersionSettings("17.2.1"), {
     SDK_VERSION_ACTUAL: "170201",
     SDK_VERSION_MAJOR: "170000",
-    SDK_VERSION_MINOR: "201",
+    SDK_VERSION_MINOR: "170201",
   });
   assert.deepEqual(sdkVersionSettings("unknown"), {});
 });
@@ -61,7 +61,7 @@ test("HelloXcode Debug simulator settings", () => {
   assert.equal(settings.SHARED_DERIVED_FILE_DIR, settings.BUILT_PRODUCTS_DIR + "/DerivedSources");
   assert.equal(settings.SDK_VERSION_ACTUAL, "180000");
   assert.equal(settings.SDK_VERSION_MAJOR, "180000");
-  assert.equal(settings.SDK_VERSION_MINOR, "0");
+  assert.equal(settings.SDK_VERSION_MINOR, "180000");
   assert.equal(settings.SDK_DIR_iphonesimulator, "/SDK/iphonesimulator.sdk");
   assert.equal(settings.PLATFORM_DISPLAY_NAME, "iOS Simulator");
   assert.equal(settings.PLATFORM_FAMILY_NAME, "iOS");
@@ -93,6 +93,44 @@ test("HelloXcode Debug simulator settings", () => {
   assert.equal(settings.PRODUCT_BUNDLE_IDENTIFIER, "com.example.HelloXcode");
   assert.equal(settings.GCC_PREPROCESSOR_DEFINITIONS, "DEBUG=1");
   assert.equal(settings.EFFECTIVE_PLATFORM_NAME, "-iphonesimulator");
+});
+
+test("Xcode 27.1 simulator settings are derived from context, not fixture paths", () => {
+  const { settings } = settingsFor({
+    projectPath: fixture("HelloXcode/HelloXcode.xcodeproj"),
+    targetName: "HelloXcode",
+  });
+  assert.equal(settings.PLATFORM_PREFERRED_ARCH, "x86_64");
+  assert.equal(settings.DOCUMENTATION_FOLDER_PATH, "HelloXcode.app/en.lproj/Documentation");
+  assert.equal(settings.INFOSTRINGS_PATH, "HelloXcode.app/en.lproj/InfoPlist.strings");
+  assert.equal(settings.ENTITLEMENTS_REQUIRED, "NO");
+  assert.equal(settings.SWIFTC_PASS_SYSROOT, "NO");
+  assert.equal(settings.LLVM_TARGET_TRIPLE_OS_VERSION, "ios17.0");
+  assert.equal(settings.PACKAGE_TYPE, "com.apple.product-type.application");
+  assert.equal(settings.WRAPPER_SUFFIX, ".app");
+  assert.equal(settings.GCC_VERSION, "com.apple.compilers.llvm.clang.1_0");
+  assert.equal(settings.INFOPLIST_OUTPUT_FORMAT, "binary");
+  assert.equal(settings.LIBRARY_FLAG_PREFIX, "-l");
+  assert.equal(settings.GENERATED_MODULEMAP_DIR,
+    "/tmp/DerivedData/Build/Intermediates.noindex/GeneratedModuleMaps-iphonesimulator");
+  assert.equal(settings.FRAMEWORK_SEARCH_PATHS, settings.BUILT_PRODUCTS_DIR);
+  assert.equal(settings.HEADER_SEARCH_PATHS, settings.BUILT_PRODUCTS_DIR + "/include");
+});
+
+test("hosted XCTest output inherits its host application's PlugIns directory", () => {
+  const { settings } = settingsFor({
+    projectPath: fixture("HelloXcode/HelloXcode.xcodeproj"),
+    targetName: "HelloXcodeTests",
+  });
+  const plugins = settings.BUILT_PRODUCTS_DIR + "/HelloXcode.app/PlugIns";
+  assert.equal(settings.TARGET_BUILD_DIR, plugins);
+  assert.equal(settings.TARGET_BUILD_SUBPATH, "/HelloXcode.app/PlugIns");
+  assert.equal(settings.DWARF_DSYM_FOLDER_PATH, plugins);
+  assert.equal(settings.CODESIGNING_FOLDER_PATH, plugins + "/HelloXcodeTests.xctest");
+  assert.equal(settings.PACKAGE_TYPE, "com.apple.product-type.bundle.unit-test");
+  assert.equal(settings.WRAPPER_SUFFIX, ".xctest");
+  assert.equal(settings.LD_RUNPATH_SEARCH_PATHS,
+    "@loader_path/Frameworks @executable_path/Frameworks");
 });
 
 test("context-derived settings cannot be erased by unscoped Xcode spec defaults", () => {
