@@ -109,16 +109,16 @@ Not automated, because it depends on what the app does:
 
 ## What these gates do not prove
 
-- On macOS 27.0.1 / Xcode 27.1, the HelloXcode fixture **passed 101
+- On macOS 27.0.1 / Xcode 27.1, the HelloXcode fixture **passed 104
   regression tests**, compiled, packaged, passed code-signing/arm64
   verification, and matched project structure. The last measured settings
-  gate still failed: **56 differing values and 219 missing occurrences
+  gate still failed: **45 differing values and 199 missing occurrences
   across two targets**.
-- Subsequent changes improve versioned SDK selection, Xcode-style inherited
-  whitespace, compiler-default precedence, app/XCTest product defaults,
-  and contextual SDK/toolchain/product values. The expanded **104/104 Node
-  regressions pass in isolated validation**, but these particular changes
-  need another actual macOS certification run before their effect is known.
+- Subsequent changes read Xcode platform bundle `Info.plist`
+  `DefaultProperties` as a lower-priority contextual layer and discover
+  SDK/platform build identifiers only when installed Apple metadata provides
+  them. The expanded **107/107 Node regressions pass in isolated validation**.
+  These improvements have NOT been measured by another genuine Mac run.
   No private Xcode cache or signing setting is fabricated to satisfy parity.
 - Missing settings now include their Xcode reference values in the detailed
   JSON report. The complete artifact can contain local paths and identities;
