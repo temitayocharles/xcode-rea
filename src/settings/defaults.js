@@ -145,6 +145,11 @@ function standardArchitectures(platform, hostArch) {
 
 function bundleLayoutDefaults(platform, productInfo) {
   if (!productInfo.wrapperExtension) return {};
+  const ancillary = {
+    PUBLIC_HEADERS_FOLDER_PATH: "$(CONTENTS_FOLDER_PATH)/Headers",
+    PRIVATE_HEADERS_FOLDER_PATH: "$(CONTENTS_FOLDER_PATH)/PrivateHeaders",
+    SHALLOW_BUNDLE: platform === "macosx" ? "NO" : "YES",
+  };
   const bundleLike = [
     "application",
     "watch-application",
@@ -167,7 +172,7 @@ function bundleLayoutDefaults(platform, productInfo) {
       EXECUTABLE_PATH: "$(WRAPPER_NAME)/Contents/MacOS/$(EXECUTABLE_NAME)",
       INFOPLIST_PATH: "$(WRAPPER_NAME)/Contents/Info.plist",
     };
-    return layout;
+    return { ...layout, ...ancillary };
   }
 
   const layout = {
@@ -177,7 +182,7 @@ function bundleLayoutDefaults(platform, productInfo) {
     PLUGINS_FOLDER_PATH: "$(WRAPPER_NAME)/PlugIns",
     SHARED_FRAMEWORKS_FOLDER_PATH: "$(WRAPPER_NAME)/SharedFrameworks",
   };
-  return layout;
+  return { ...layout, ...ancillary };
 }
 
 export function platformDefaults(context) {
