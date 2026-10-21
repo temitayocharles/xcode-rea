@@ -323,6 +323,8 @@ export function genericDefaults(context) {
     `${configuration}${effectivePlatformName(platform)}`,
   );
   const targetTemp = join(configurationTemp, `${target?.name ?? project.name}.build`);
+  const derivedSources = join(targetTemp, "DerivedSources");
+  const objectFilesRoot = join(targetTemp, "Objects");
   const productInfo = productTypeInfo(target?.productType ?? "");
   const productName = target?.productName ?? "$(TARGET_NAME)";
   // ARCHS is the requested architecture *set*, even when ONLY_ACTIVE_ARCH
@@ -345,10 +347,26 @@ export function genericDefaults(context) {
     SYMROOT: dirname(productsDir),
     OBJROOT: objRoot,
     CONFIGURATION_TEMP_DIR: configurationTemp,
+    PROJECT_TEMP_DIR: join(objRoot, `${project.name}.build`),
     TARGET_TEMP_DIR: targetTemp,
-    DERIVED_FILE_DIR: targetTemp,
-    DERIVED_FILES_DIR: targetTemp,
+    DERIVED_FILE_DIR: derivedSources,
+    DERIVED_FILES_DIR: "$(DERIVED_FILE_DIR)",
+    DERIVED_SOURCES_DIR: "$(DERIVED_FILE_DIR)",
     SHARED_DERIVED_FILE_DIR: "$(DERIVED_FILE_DIR)/Shared",
+    OBJECT_FILE_DIR: objectFilesRoot,
+    OBJECT_FILE_DIR_normal: join(targetTemp, "Objects-normal"),
+    FIXED_FILES_DIR: join(targetTemp, "FixedFiles"),
+    GENERATED_MODULEMAP_DIR: join(targetTemp, "GeneratedModuleMaps"),
+    REZ_COLLECTOR_DIR: join(targetTemp, "ResourceManagerResources"),
+    DWARF_DSYM_FOLDER_PATH: "$(CONFIGURATION_BUILD_DIR)",
+    DWARF_DSYM_FILE_NAME: "$(FULL_PRODUCT_NAME).dSYM",
+    EXECUTABLE_FOLDER_PATH: "$(CONTENTS_FOLDER_PATH)",
+    EXECUTABLES_FOLDER_PATH: "$(CONTENTS_FOLDER_PATH)/Executables",
+    DOCUMENTATION_FOLDER_PATH: "$(CONTENTS_FOLDER_PATH)/Documentation",
+    MODULES_FOLDER_PATH: "$(CONTENTS_FOLDER_PATH)/Modules",
+    JAVA_FOLDER_PATH: "$(CONTENTS_FOLDER_PATH)/Java",
+    INFOSTRINGS_PATH: "$(CONTENTS_FOLDER_PATH)/InfoPlist.strings",
+    LOCALIZED_RESOURCES_FOLDER_PATH: "$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/$(DEVELOPMENT_LANGUAGE).lproj",
     MODULE_CACHE_DIR: join(objRoot, "ModuleCache.noindex"),
     PROJECT_DIR: projectDir,
     SRCROOT: projectDir,
@@ -386,7 +404,8 @@ export function genericDefaults(context) {
     SDK_NAME: sdk?.name ?? SDKROOT_NAME[platform] ?? platform,
     SDK_VERSION: sdk?.version ?? "",
     SDK_DIR: sdk?.path ?? "",
-    LANGUAGE: "en",
+    LANGUAGE: project.developmentRegion || "en",
+    DEVELOPMENT_LANGUAGE: project.developmentRegion || "en",
     PRODUCT_TYPE: target?.productType ?? "",
     ...configurationDefaults,
     ...productInfo.extra,
