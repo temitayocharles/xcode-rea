@@ -60,7 +60,7 @@ const MINIMUM_DEPLOYMENT_TARGET = {
 
 const PLATFORM_LABELS = {
   iphoneos: ["iOS", "iOS", "arm64"],
-  iphonesimulator: ["iOS Simulator", "iOS", null],
+  iphonesimulator: ["iOS Simulator", "iOS", "x86_64"],
   macosx: ["macOS", "macOS", null],
   appletvos: ["tvOS", "tvOS", "arm64"],
   appletvsimulator: ["tvOS Simulator", "tvOS", null],
@@ -80,7 +80,7 @@ export function sdkVersionSettings(version) {
   return {
     SDK_VERSION_ACTUAL: String(major * 10000 + minor * 100 + patch),
     SDK_VERSION_MAJOR: String(major * 10000),
-    SDK_VERSION_MINOR: String(minor * 100 + patch),
+    SDK_VERSION_MINOR: String(major * 10000 + minor * 100 + patch),
   };
 }
 
@@ -194,6 +194,7 @@ export function platformDefaults(context) {
     sdkDefaults[deploymentSetting] ?? MINIMUM_DEPLOYMENT_TARGET[platform] ?? "1.0";
   const platformDir = developerDir ? join(developerDir, "Platforms", `${PLATFORM_DIR_NAME[platform] ?? platform}.platform`) : "";
   const platformDeveloperDir = platformDir ? join(platformDir, "Developer") : "";
+  const localizedResources = "$(CONTENTS_FOLDER_PATH)/$(DEVELOPMENT_LANGUAGE).lproj";
   const standardArch = standardArchitectures(platform, hostArch);
   const [displayName, familyName, preferredArch] = PLATFORM_LABELS[platform] ?? [platform, platform, null];
 
@@ -253,7 +254,7 @@ export function platformDefaults(context) {
     defaults.DEVELOPER_BIN_DIR = join(developerDir, "usr", "bin");
     defaults.DEVELOPER_FRAMEWORKS_DIR = join(developerDir, "Library", "Frameworks");
     defaults.DEVELOPER_LIBRARY_DIR = join(developerDir, "Library");
-    defaults.DEVELOPER_SDK_DIR = join(developerDir, "SDKs");
+    defaults.DEVELOPER_SDK_DIR = join(developerDir, "Platforms", "MacOSX.platform", "Developer", "SDKs");
     defaults.DEVELOPER_TOOLS_DIR = join(developerDir, "Tools");
     defaults.DEVELOPER_USR_DIR = join(developerDir, "usr");
   }
@@ -399,20 +400,36 @@ export function genericDefaults(context) {
     DERIVED_FILES_DIR: "$(DERIVED_FILE_DIR)",
     DERIVED_SOURCES_DIR: "$(DERIVED_FILE_DIR)",
     SHARED_DERIVED_FILE_DIR: "$(BUILT_PRODUCTS_DIR)/DerivedSources",
+    GENERATED_MODULEMAP_DIR: join(objRoot, `GeneratedModuleMaps${effectivePlatformName(platform)}`),
     OBJECT_FILE_DIR: objectFilesRoot,
     OBJECT_FILE_DIR_normal: join(targetTemp, "Objects-normal"),
     FIXED_FILES_DIR: join(targetTemp, "FixedFiles"),
-    GENERATED_MODULEMAP_DIR: join(targetTemp, "GeneratedModuleMaps"),
     REZ_COLLECTOR_DIR: join(targetTemp, "ResourceManagerResources"),
     DWARF_DSYM_FOLDER_PATH: "$(CONFIGURATION_BUILD_DIR)",
     DWARF_DSYM_FILE_NAME: "$(FULL_PRODUCT_NAME).dSYM",
     EXECUTABLE_FOLDER_PATH: "$(CONTENTS_FOLDER_PATH)",
     EXECUTABLES_FOLDER_PATH: "$(CONTENTS_FOLDER_PATH)/Executables",
-    DOCUMENTATION_FOLDER_PATH: "$(CONTENTS_FOLDER_PATH)/Documentation",
+    DOCUMENTATION_FOLDER_PATH: "$(CONTENTS_FOLDER_PATH)/$(DEVELOPMENT_LANGUAGE).lproj/Documentation",
     MODULES_FOLDER_PATH: "$(CONTENTS_FOLDER_PATH)/Modules",
     JAVA_FOLDER_PATH: "$(CONTENTS_FOLDER_PATH)/Java",
-    INFOSTRINGS_PATH: "$(CONTENTS_FOLDER_PATH)/InfoPlist.strings",
+    INFOSTRINGS_PATH: "$(CONTENTS_FOLDER_PATH)/$(DEVELOPMENT_LANGUAGE).lproj/InfoPlist.strings",
     LOCALIZED_RESOURCES_FOLDER_PATH: "$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/$(DEVELOPMENT_LANGUAGE).lproj",
+    SHARED_SUPPORT_FOLDER_PATH: "$(CONTENTS_FOLDER_PATH)/SharedSupport",
+    SCRIPTS_FOLDER_PATH: "$(CONTENTS_FOLDER_PATH)/Scripts",
+    PBDEVELOPMENTPLIST_PATH: "$(WRAPPER_NAME)/pbdevelopment.plist",
+    PKGINFO_PATH: "$(WRAPPER_NAME)/PkgInfo",
+    VERSIONPLIST_PATH: "$(WRAPPER_NAME)/version.plist",
+    WRAPPER_SUFFIX: productInfo.wrapperExtension ? `.${productInfo.wrapperExtension}` : "",
+    PACKAGE_TYPE: target?.productType ?? "",
+    VERSION_INFO_FILE: "$(PRODUCT_NAME)_vers.c",
+    VERSION_INFO_BUILDER: "$(ALTERNATE_OWNER)",
+    LOCROOT: projectDir,
+    LOCSYMROOT: projectDir,
+    PER_ARCH_MODULE_FILE_DIR: "$(TARGET_TEMP_DIR)/Objects-normal/$(CURRENT_ARCH)",
+    PER_ARCH_OBJECT_FILE_DIR: "$(OBJECT_FILE_DIR_normal)/$(CURRENT_ARCH)",
+    PER_VARIANT_OBJECT_FILE_DIR: "$(OBJECT_FILE_DIR_normal)/$(CURRENT_ARCH)",
+    LLVM_TARGET_TRIPLE_OS_VERSION: `${platform === "macosx" ? "macosx" : platform === "iphonesimulator" || platform === "iphoneos" ? "ios" : platform}$(DEPLOYMENT_TARGET)`,
+    SWIFT_PLATFORM_TARGET_PREFIX: platform === "iphonesimulator" || platform === "iphoneos" ? "ios" : platform,
     MODULE_CACHE_DIR: join(objRoot, "ModuleCache.noindex"),
     PROJECT_DIR: projectDir,
     SRCROOT: projectDir,
@@ -467,6 +484,36 @@ export function genericDefaults(context) {
     DEVELOPMENT_TEAM: "",
     PROVISIONING_PROFILE_SPECIFIER: "",
     ENTITLEMENTS_REQUIRED: "NO",
+    LIBRARY_FLAG_PREFIX: "-l",
+    GCC_VERSION: "com.apple.compilers.llvm.clang.1_0",
+    GCC_VERSION_IDENTIFIER: "com_apple_compilers_llvm_clang_1_0",
+    GCC_INLINES_ARE_PRIVATE_EXTERN: "YES",
+    GCC_OBJC_LEGACY_DISPATCH: "YES",
+    GCC_WARN_64_TO_32_BIT_CONVERSION: "NO",
+    LD_EXPORT_GLOBAL_SYMBOLS: "YES",
+    _SWIFT_EXPLICIT_MODULES_ALLOW_CXX_INTEROP: "YES",
+    SWIFT_ENABLE_EXPLICIT_MODULES: "YES",
+    TOOLCHAINS: "com.apple.dt.toolchain.XcodeDefault",
+    JAVA_APP_STUB: "/System/Library/Frameworks/JavaVM.framework/Resources/MacOS/JavaApplicationStub",
+    DEFAULT_COMPILER: "com.apple.compilers.llvm.clang.1_0",
+    INFOPLIST_OUTPUT_FORMAT: "binary",
+    PLIST_FILE_OUTPUT_FORMAT: "binary",
+    STRINGS_FILE_OUTPUT_ENCODING: "binary",
+    SYSTEM_DEXT_INSTALL_PATH: "/System/Library/DriverExtensions",
+    SYSTEM_KEXT_INSTALL_PATH: "/System/Library/Extensions",
+    LIBRARY_DEXT_INSTALL_PATH: "/Library/DriverExtensions",
+    LIBRARY_KEXT_INSTALL_PATH: "/Library/Extensions",
+    INSTALL_PATH: productInfo.kind === "application" ? "/Applications" : "",
+    INSTALL_DIR: productInfo.kind === "application" ? "/tmp/$(PRODUCT_NAME).dst/Applications" : "/tmp/$(PRODUCT_NAME).dst",
+    FRAMEWORK_SEARCH_PATHS: "$(BUILT_PRODUCTS_DIR) $(inherited)",
+    HEADER_SEARCH_PATHS: "$(BUILT_PRODUCTS_DIR)/include $(inherited)",
+    LIBRARY_SEARCH_PATHS: "$(BUILT_PRODUCTS_DIR) $(inherited)",
+    REZ_SEARCH_PATHS: "$(BUILT_PRODUCTS_DIR) $(inherited)",
+    PATH_PREFIXES_EXCLUDED_FROM_HEADER_DEPENDENCIES: [
+      "/usr/include", "/usr/local/include", "/System/Library/Frameworks",
+      "/System/Library/PrivateFrameworks", "$(DEVELOPER_DIR)/Headers",
+      "$(DEVELOPER_DIR)/SDKs", "$(DEVELOPER_DIR)/Platforms",
+    ].join(" "),
     ALWAYS_SEARCH_USER_PATHS: "NO",
     CLANG_ANALYZER_NONNULL: "YES",
     CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION: "YES_AGGRESSIVE",
@@ -525,9 +572,6 @@ export function genericDefaults(context) {
     MARKETING_VERSION: "1.0",
     CURRENT_PROJECT_VERSION: "1",
     ASSETCATALOG_COMPILER_APPICON_NAME: "",
-    FRAMEWORK_SEARCH_PATHS: "$(inherited)",
-    HEADER_SEARCH_PATHS: "$(inherited)",
-    LIBRARY_SEARCH_PATHS: "$(inherited)",
     SWIFT_INCLUDE_PATHS: "$(inherited)",
     OTHER_LDFLAGS: "$(inherited)",
     OTHER_SWIFT_FLAGS: "$(inherited)",
