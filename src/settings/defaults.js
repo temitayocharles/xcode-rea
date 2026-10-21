@@ -592,6 +592,15 @@ export function genericDefaults(context) {
     DEVELOPER_FRAMEWORKS_DIR_QUOTED: "$(DEVELOPER_FRAMEWORKS_DIR)",
     EFFECTIVE_SWIFT_VERSION: "$(SWIFT_VERSION)",
     RPATH_ORIGIN: "@loader_path",
+    // These conditional selector flags are derived directly from platform
+    // identity; they are not machine-specific Xcode state.
+    __IS_NOT_MACOS: platform === "macosx" ? "NO" : "YES",
+    __IS_NOT_MACOS_macosx: "NO",
+    __IS_NOT_SIMULATOR: platform.endsWith("simulator") ? "NO" : "YES",
+    __IS_NOT_SIMULATOR_simulator: "NO",
+    __ORIGINAL_SDK_DEFINED_LLVM_TARGET_TRIPLE_SYS: platform === "iphonesimulator" ||
+      platform === "iphoneos" ? "ios" : platform === "macosx" ? "macosx" : platform,
+    __ARCHS__: "$(ARCHS)",
     PLATFORM_NAME: platform,
     SDKROOT: sdk?.path ?? SDKROOT_NAME[platform] ?? platform,
     SDK_NAME: sdk?.name ?? SDKROOT_NAME[platform] ?? platform,
