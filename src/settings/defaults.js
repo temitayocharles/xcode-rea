@@ -414,6 +414,8 @@ export function genericDefaults(context) {
     SOURCE_ROOT: projectDir,
     PROJECT_FILE_PATH: projectPath,
     PROJECT_NAME: project.name,
+    PROJECT: project.name,
+    PROJECT_GUID: project.rootObject ?? "",
     TARGET_NAME: target?.name ?? project.name,
     TARGETNAME: target?.name ?? project.name,
     PRODUCT_NAME: productName,
