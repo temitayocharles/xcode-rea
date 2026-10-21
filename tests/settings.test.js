@@ -72,6 +72,9 @@ test("HelloXcode Debug simulator settings", () => {
   assert.equal(settings.EXECUTABLE_FOLDER_PATH, "HelloXcode.app");
   assert.equal(settings.LOCALIZED_RESOURCES_FOLDER_PATH, "HelloXcode.app/en.lproj");
   assert.equal(settings.DEVELOPMENT_LANGUAGE, "en");
+  const fixtureProject = loadProject(fixture("HelloXcode/HelloXcode.xcodeproj"));
+  assert.equal(settings.PROJECT, fixtureProject.name);
+  assert.equal(settings.PROJECT_GUID, fixtureProject.rootObject);
   assert.equal(settings.ARCHS, "arm64 x86_64");
   assert.equal(settings.ONLY_ACTIVE_ARCH, "YES");
   assert.equal(settings.SWIFT_OPTIMIZATION_LEVEL, "-Onone");
