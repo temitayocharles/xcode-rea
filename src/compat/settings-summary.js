@@ -84,8 +84,20 @@ export function redactSettingValue(value) {
       // versus simulator SDK frameworks appear identical after redaction.
       const platformMatch = /\/Platforms\/([A-Za-z0-9]+\.platform)\//.exec(path);
       const platformLabel = platformMatch ? `platform:${platformMatch[1]};` : "";
+      // Preserve only standard, public Apple toolchain components below the
+      // platform bundle. This reveals SDK-vs-platform framework differences
+      // without exposing the machine's installation location or username.
+      let publicRelative = "";
+      if (platformMatch) {
+        const tail = path.slice(path.indexOf(platformMatch[0]) + platformMatch[0].length);
+        const parts = tail.split("/").filter(Boolean);
+        if (parts.length > 0 && parts.length <= 8 &&
+            parts.every((part) => /^(?:Developer|SDKs|System|Library|Frameworks|PrivateFrameworks|[A-Za-z0-9.]+\\.sdk)$/.test(part))) {
+          publicRelative = `;relative:${parts.join("/")}`;
+        }
+      }
       return prefix + "<" + platformLabel + "absolute:" +
-        components.slice(-2).join("/") + ">";
+        components.slice(-2).join("/") + publicRelative + ">";
     },
   );
   return pathsRedacted.length <= 220
@@ -116,5 +128,43 @@ export function summarizeValueDifferences(report, { limit = 45 } = {}) {
     output.push(`    Xcode:    ${redactSettingValue(row.xcodebuild)}`);
   }
   if (rows.length > limit) output.push(`  ... ${rows.length - limit} additional differing occurrences in JSON`);
+  return output.join("\n");
+}
+
+/**
+ * Only selected non-identity Xcode build-setting references may appear in the
+ * terminal. Internal keys, provisioning identities and token-like values stay
+ * in the local JSON report. All absolute paths are still masked.
+ */
+const DIAGNOSTIC_REFERENCE_KEYS = new Set([
+  "ARCHS_STANDARD_32_64_BIT", "ARCHS_UNIVERSAL_IPHONE_OS",
+  "MACOSX_DEPLOYMENT_TARGET", "NATIVE_ARCH_32_BIT", "NATIVE_ARCH_64_BIT",
+  "PLATFORM_REQUIRES_SWIFT_AUTOLINK_EXTRACT",
+  "PLATFORM_REQUIRES_SWIFT_MODULEWRAP", "PLATFORM_USES_DSYMS",
+  "COMPILATION_CACHE_KEEP_CAS_DIRECTORY", "SCANNING_PCM_KEEP_CACHE_DIRECTORY",
+  "RPATH_ORIGIN", "SWIFT_EMIT_CONST_VALUE_PROTOCOLS", "ENABLE_DEBUG_DYLIB",
+  "ANDROID_DEPLOYMENT_TARGET", "DRIVERKIT_DEPLOYMENT_TARGET",
+  "DIAGNOSE_MISSING_TARGET_DEPENDENCIES", "LINK_OBJC_RUNTIME",
+  "ONLY_ARCH", "RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET",
+  "SKIP_COPYING_TEST_FRAMEWORKS", "TVOS_DEPLOYMENT_TARGET",
+  "WATCHOS_DEPLOYMENT_TARGET", "XROS_DEPLOYMENT_TARGET",
+  "SUPPORTS_ON_DEMAND_RESOURCES", "VALIDATE_DEVELOPMENT_ASSET_PATHS",
+]);
+export function summarizeMissingReferenceValues(report, { limit = 35 } = {}) {
+  if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+    throw new RangeError("limit must be an integer between 1 and 100");
+  }
+  const gate = report?.gates?.find((item) => item.name === "settings: resolved build settings");
+  if (!Array.isArray(gate?.differences)) throw new Error("report lacks structured differences");
+  const seen = new Set();
+  const output = ["SELECTED MISSING REFERENCE VALUES (sensitive/internal keys excluded)",
+    "Xcode values are diagnostic evidence, NOT substitutes for implementation."];
+  for (const d of gate.differences) {
+    if (d.kind !== "missing" || !DIAGNOSTIC_REFERENCE_KEYS.has(d.key)) continue;
+    if (seen.has(d.key) || typeof d.xcodebuild !== "string") continue;
+    seen.add(d.key);
+    output.push(`  ${d.key} = ${redactSettingValue(d.xcodebuild)}`);
+    if (seen.size >= limit) break;
+  }
   return output.join("\n");
 }
