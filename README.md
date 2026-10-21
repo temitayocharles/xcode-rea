@@ -24,12 +24,12 @@ node bin/xcl.mjs -project ~/Projects/Hello/Hello.xcodeproj -scheme Hello \
 > Status: **0.1.0 — macOS build and signing verified, settings parity incomplete.**
 >
 > On macOS 27.0.1 / Xcode 27.1, the Apple Silicon HelloXcode fixture passed
-> **126/126 Node tests**, project structure, real simulator compilation, bundle
-> signing, and arm64 architecture validation. The same hardware run had
-> **0 differing values and 41 missing setting occurrences** across the app
-> and test targets. These are occurrences, not unique settings. Subsequent
-> workspace, wrapper-layout and simulator provisioning corrections pass
-> **128 Node tests**, but are not yet Mac-certified.
+> **128/128 Node tests**, project structure, real simulator compilation, bundle
+> signing, and arm64 architecture validation. The latest hardware run has
+> **0 differing values and 29 missing setting occurrences** across the app
+> and test targets. These are occurrences, not unique setting keys. Subsequent
+> hosted XCTest simulator-signing conditionals are regression-tested but
+> have not yet been certified on Mac hardware.
 > See the [release gate](docs/RELEASE-GATE.md) for evidence boundaries.
 >
 > Test execution, Swift Package resolution, archives/notarization and Interface
@@ -290,7 +290,7 @@ Claims here are deliberately split into two levels:
 
 An Apple Silicon Mac running Xcode 27.1 has successfully built, signed,
 and passed architecture verification for the HelloXcode fixture. Its last
-full hardware certification reported **0 differing values and 41 missing
+full hardware certification reported **0 differing values and 29 missing
 setting occurrences** across the application and test targets. Full
 `-showBuildSettings` parity remains unverified. Subsequent changes derive
 WORKSPACE_DIR from the selected project/workspace, expose the documented
