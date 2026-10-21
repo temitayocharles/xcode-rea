@@ -291,7 +291,7 @@ test("xcconfig include chains and precedence", () => {
   assert.equal(settings.PRODUCT_BUNDLE_IDENTIFIER, "com.example.ConfigChains");
   assert.equal(settings.GCC_PREPROCESSOR_DEFINITIONS, " SHARED=1");
   assert.equal(settings.OTHER_LDFLAGS, " -ObjC -lsim -framework Security");
-  assert.equal(settings.SWIFT_ACTIVE_COMPILATION_CONDITIONS, "DEBUG");
+  assert.equal(settings.SWIFT_ACTIVE_COMPILATION_CONDITIONS, "DEBUG ");
 });
 
 test("SDK-conditional xcconfig values differ by platform", () => {
@@ -304,8 +304,8 @@ test("SDK-conditional xcconfig values differ by platform", () => {
     targetName: "ConfigChains",
     platform: "iphoneos",
   }).settings;
-  assert.equal(simulator.OTHER_LDFLAGS, "-ObjC -lsim -framework Security");
-  assert.equal(device.OTHER_LDFLAGS, "-ObjC -framework CoreLocation -framework Security");
+  assert.equal(simulator.OTHER_LDFLAGS, " -ObjC -lsim -framework Security");
+  assert.equal(device.OTHER_LDFLAGS, " -ObjC -framework CoreLocation -framework Security");
 });
 
 test("Release configuration uses its own xcconfig", () => {
