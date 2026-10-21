@@ -1,4 +1,4 @@
-import { basename, dirname, extname, normalize } from "node:path";
+import { basename, dirname, extname, join, normalize, relative } from "node:path";
 import { readXcconfig, parseConditionalKey } from "../xcode/xcconfig.js";
 import { matchesGlob } from "../util/text.js";
 import { genericDefaults, deploymentTargetSetting } from "./defaults.js";
@@ -418,6 +418,28 @@ export function resolveBuildSettings(options) {
         xcconfigLayer(project, targetConfig.baseConfigurationReference, xcconfigCache, warnings),
       );
       pushLayer("target", targetConfig.buildSettings);
+    }
+  }
+
+  // Hosted unit tests are embedded in the host app's PlugIns directory.
+  // Derive this from TEST_HOST, not from a fixture name or a fixed app path.
+  // Apply before explicit -xcconfig/CLI overrides so user selections still win.
+  if (target?.productType === "com.apple.product-type.bundle.unit-test") {
+    const resolved = expandSettings(accumulator).settings;
+    const testHost = resolved.TEST_HOST || "";
+    const productsDir = resolved.BUILT_PRODUCTS_DIR || "";
+    const match = /^(.*?\.app)(?:\/|$)/.exec(testHost);
+    if (match && productsDir && match[1].startsWith(productsDir + "/")) {
+      const appRelative = relative(productsDir, match[1]);
+      if (appRelative && !appRelative.startsWith("..")) {
+        const pluginSuffix = platform === "macosx" ? "Contents/PlugIns" : "PlugIns";
+        const path = join(match[1], pluginSuffix);
+        pushLayer("hosted-test-bundle", {
+          TARGET_BUILD_SUBPATH: "/" + join(appRelative, pluginSuffix),
+          TARGET_BUILD_DIR: path,
+          DWARF_DSYM_FOLDER_PATH: path,
+        });
+      }
     }
   }
 
