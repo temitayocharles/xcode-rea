@@ -288,11 +288,14 @@ Claims here are deliberately split into two levels:
 - **Verified** — the behaviour was reproduced against real Xcode for a real
   project on macOS.
 
-An Apple Silicon Mac running Xcode 27.1 has successfully built, signed
-and passed architecture verification for the HelloXcode fixture. Full
-`-showBuildSettings` parity remains unverified. The fixture's last settings
-comparison recorded 240 value differences and 308 missing occurrences;
-later resolver and harness fixes have not been hardware-certified.
+An Apple Silicon Mac running Xcode 27.1 has successfully built, signed,
+and passed architecture verification for the HelloXcode fixture. Its last
+full hardware certification reported **162 value differences and 282 missing
+setting occurrences** across the application and test targets. Full
+`-showBuildSettings` parity remains unverified. The later SDK alias,
+DerivedSources, platform metadata, non-compiling architecture-query and
+local-account fixes have unit/regression coverage, but have **not** yet
+been exercised by the hardware release gate.
 
 For one complete Mac regression, build and differential check:
 
@@ -315,7 +318,7 @@ silently disappearing from a commit.
 ## Development
 
 ```bash
-npm test                    # 91 tests, no dependencies, ~3 seconds
+npm test                    # 96 tests, no dependencies, ~3 seconds
 npm run demo                # list the fixture project
 npm run demo:settings       # resolve settings for the fixture
 npm run demo:plan           # print a build plan
