@@ -177,6 +177,31 @@ test("hosted XCTest output inherits its host application's PlugIns directory", (
     " -plugin-path " + settings.TOOLCHAIN_DIR + "/usr/lib/swift/host/plugins/testing");
 });
 
+test("XCTest defaults remain subordinate to explicit build-setting overrides", () => {
+  const project = loadProject(fixture("HelloXcode/HelloXcode.xcodeproj"));
+  const target = project.targetByName("HelloXcodeTests");
+  const { settings } = resolveBuildSettings({
+    project, target,
+    configuration: "Debug", platform: "iphonesimulator",
+    sdk: {
+      path: "/SDK/iPhoneSimulator27.1.sdk", root: "iphonesimulator",
+      name: "iphonesimulator27.1", version: "27.1", defaultProperties: {},
+    },
+    arch: "arm64", hostArch: "arm64",
+    developerDir: "/Developer", derivedDataPath: "/tmp/xcl-test-overrides",
+    overrides: {
+      OTHER_SWIFT_FLAGS: "-DUSER_CUSTOM",
+      LIBRARY_SEARCH_PATHS: "/Custom/Libraries",
+      STRIP_STYLE: "all",
+      EFFECTIVE_SWIFT_VERSION: "custom-version",
+    },
+  });
+  assert.equal(settings.OTHER_SWIFT_FLAGS, "-DUSER_CUSTOM");
+  assert.equal(settings.LIBRARY_SEARCH_PATHS, "/Custom/Libraries");
+  assert.equal(settings.STRIP_STYLE, "all");
+  assert.equal(settings.EFFECTIVE_SWIFT_VERSION, "custom-version");
+});
+
 test("context-derived settings cannot be erased by unscoped Xcode spec defaults", () => {
   const project = loadProject(fixture("HelloXcode/HelloXcode.xcodeproj"));
   const target = project.targetByName("HelloXcode");
