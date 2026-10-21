@@ -473,6 +473,11 @@ export function planTarget({
   }
 
   const builtProductsDir = settings.BUILT_PRODUCTS_DIR;
+  // Hosted XCTest bundles must actually be placed inside the host app's
+  // PlugIns directory. Keep BUILT_PRODUCTS_DIR as the shared dependency root.
+  const hostedTest = productInfo.kind === "unit-test" &&
+    Boolean(settings.TARGET_BUILD_SUBPATH) && Boolean(settings.TARGET_BUILD_DIR);
+  const productOutputDir = hostedTest ? settings.TARGET_BUILD_DIR : builtProductsDir;
   const targetTempDir = settings.TARGET_TEMP_DIR;
   const objectDir = join(targetTempDir, "Objects-normal", arch);
   const effectiveDeploymentTarget =
@@ -485,24 +490,24 @@ export function planTarget({
 
   let productPath = project.productPath(target.id);
   productPath = productPath ? expandPath(productPath, settings) : "";
-  if (!productPath) productPath = join(builtProductsDir, settings.WRAPPER_NAME);
+  if (!productPath || hostedTest) productPath = join(productOutputDir, settings.WRAPPER_NAME);
 
   const isWrapper = Boolean(productInfo.wrapperExtension);
   const resourcesDir = isWrapper
-    ? join(builtProductsDir, expandPath(settings.UNLOCALIZED_RESOURCES_FOLDER_PATH || settings.WRAPPER_NAME, settings))
+    ? join(productOutputDir, expandPath(settings.UNLOCALIZED_RESOURCES_FOLDER_PATH || settings.WRAPPER_NAME, settings))
     : "";
   const frameworksDir = isWrapper
-    ? join(builtProductsDir, expandPath(settings.FRAMEWORKS_FOLDER_PATH || settings.WRAPPER_NAME, settings))
+    ? join(productOutputDir, expandPath(settings.FRAMEWORKS_FOLDER_PATH || settings.WRAPPER_NAME, settings))
     : "";
   const pluginsDir = isWrapper
-    ? join(builtProductsDir, expandPath(settings.PLUGINS_FOLDER_PATH || settings.WRAPPER_NAME, settings))
+    ? join(productOutputDir, expandPath(settings.PLUGINS_FOLDER_PATH || settings.WRAPPER_NAME, settings))
     : "";
   const infoPlistPath = isWrapper
-    ? join(builtProductsDir, expandPath(settings.INFOPLIST_PATH || `${settings.WRAPPER_NAME}/Info.plist`, settings))
+    ? join(productOutputDir, expandPath(settings.INFOPLIST_PATH || `${settings.WRAPPER_NAME}/Info.plist`, settings))
     : "";
   const executablePath = isWrapper
-    ? join(builtProductsDir, expandPath(settings.EXECUTABLE_PATH || settings.WRAPPER_NAME, settings))
-    : join(builtProductsDir, expandPath(settings.EXECUTABLE_NAME || settings.PRODUCT_NAME, settings));
+    ? join(productOutputDir, expandPath(settings.EXECUTABLE_PATH || settings.WRAPPER_NAME, settings))
+    : join(productOutputDir, expandPath(settings.EXECUTABLE_NAME || settings.PRODUCT_NAME, settings));
 
   // --- directories -------------------------------------------------------
   const directories = [
