@@ -106,7 +106,7 @@ test("Xcode 27.1 simulator settings are derived from context, not fixture paths"
   assert.equal(settings.ENTITLEMENTS_REQUIRED, "NO");
   assert.equal(settings.SWIFTC_PASS_SYSROOT, "NO");
   assert.equal(settings.LLVM_TARGET_TRIPLE_OS_VERSION, "ios17.0");
-  assert.equal(settings.PACKAGE_TYPE, "com.apple.product-type.application");
+  assert.equal(settings.PACKAGE_TYPE, "com.apple.package-type.wrapper.application");
   assert.equal(settings.WRAPPER_SUFFIX, ".app");
   assert.equal(settings.GCC_VERSION, "com.apple.compilers.llvm.clang.1_0");
   assert.equal(settings.INFOPLIST_OUTPUT_FORMAT, "binary");
@@ -127,7 +127,7 @@ test("hosted XCTest output inherits its host application's PlugIns directory", (
   assert.equal(settings.TARGET_BUILD_SUBPATH, "/HelloXcode.app/PlugIns");
   assert.equal(settings.DWARF_DSYM_FOLDER_PATH, plugins);
   assert.equal(settings.CODESIGNING_FOLDER_PATH, plugins + "/HelloXcodeTests.xctest");
-  assert.equal(settings.PACKAGE_TYPE, "com.apple.product-type.bundle.unit-test");
+  assert.equal(settings.PACKAGE_TYPE, "com.apple.package-type.bundle.unit-test");
   assert.equal(settings.WRAPPER_SUFFIX, ".xctest");
   assert.equal(settings.LD_RUNPATH_SEARCH_PATHS,
     "@loader_path/Frameworks @executable_path/Frameworks");
@@ -249,7 +249,7 @@ test("installed SDK and Xcode paths remain authoritative over spec placeholders"
     developerDir + "/Platforms/iPhoneSimulator.platform/Developer/SDKs");
   assert.equal(settings.ARCHS, "arm64 x86_64");
   assert.equal(settings.CODE_SIGNING_ALLOWED, "YES");
-  assert.equal(settings.GCC_VERSION, "xcl-spec-only");
+  assert.equal(settings.GCC_VERSION, "com.apple.compilers.llvm.clang.1_0");
 });
 
 test("HelloXcode Release settings", () => {
