@@ -5,6 +5,26 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { loadXcodeSpecDefaults } from "../src/settings/spec.js";
 
+test("spec cache invalidates when Xcode bundle version changes at the same path", (t) => {
+  const temp = mkdtempSync(join(tmpdir(), "xcl-spec-upgrade-"));
+  t.after(() => rmSync(temp, { recursive: true, force: true }));
+  const developerDir = join(temp, "Contents", "Developer");
+  const resourceDir = join(developerDir, "Library", "Xcode", "Specifications");
+  const bundleVersion = join(temp, "Contents", "version.plist");
+  const specFile = join(resourceDir, "One.xcspec");
+  mkdirSync(resourceDir, { recursive: true });
+  const writeSpec = (value) => writeFileSync(specFile,
+    `[{ Type = Compiler; Options = ({ Name = XCL_UPGRADE_TEST; DefaultValue = "${value}"; }); }]`);
+  writeFileSync(bundleVersion, "xcode-build-A");
+  writeSpec("before");
+  const initial = loadXcodeSpecDefaults({ developerDir });
+  assert.equal(initial.defaults.XCL_UPGRADE_TEST, "before");
+  writeFileSync(bundleVersion, "xcode-build-B");
+  writeSpec("after");
+  const upgraded = loadXcodeSpecDefaults({ developerDir });
+  assert.equal(upgraded.defaults.XCL_UPGRADE_TEST, "after");
+});
+
 test("Xcode spec discovery supports Plug-ins and SwiftBuild framework plugin roots", (t) => {
   const temp = mkdtempSync(join(tmpdir(), "xcl-spec-discovery-"));
   t.after(() => rmSync(temp, { recursive: true, force: true }));
