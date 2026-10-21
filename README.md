@@ -297,7 +297,7 @@ WORKSPACE_DIR from the selected project/workspace, expose the documented
 deep-bundle relative suffixes and simulator provisioning requirements.
 The existing one-command verifier now reports only non-sensitive provisioning
 capabilities and structural shapes of selected cache paths without printing
-private roots or digests. **128/128 Node regressions pass in isolation**;
+private roots or digests. **129/129 Node regressions pass in isolation**;
 the post-fix Mac settings parity remains unmeasured. Private signing
 identities, dynamic SDK cache hashes and Xcode internals are not fabricated.
 
@@ -322,7 +322,7 @@ silently disappearing from a commit.
 ## Development
 
 ```bash
-npm test                    # 128 tests, no dependencies, ~3 seconds
+npm test                    # 129 tests, no dependencies, ~3 seconds
 npm run demo                # list the fixture project
 npm run demo:settings       # resolve settings for the fixture
 npm run demo:plan           # print a build plan
