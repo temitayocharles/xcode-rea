@@ -588,6 +588,10 @@ export function genericDefaults(context) {
     CLANG_CACHE_FINE_GRAINED_OUTPUTS: "YES",
     JAVA_APP_STUB: "/System/Library/Frameworks/JavaVM.framework/Resources/MacOS/JavaApplicationStub",
     SYSTEM_LIBRARY_DIR: "/System/Library",
+    // Apple Build Setting Reference defines these user-realm paths relative
+    // to HOME, never the login name or project checkout location.
+    USER_APPS_DIR: "$(HOME)/Applications",
+    USER_LIBRARY_DIR: "$(HOME)/Library",
     LOCAL_LIBRARY_DIR: "/Library",
     LOCAL_APPS_DIR: "/Applications",
     LOCAL_ADMIN_APPS_DIR: "/Applications/Utilities",
