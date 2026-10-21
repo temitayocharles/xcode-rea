@@ -319,6 +319,7 @@ export function makeSettingsResolver(environment) {
       ) ?? environment.context.primaryProject;
     return resolveBuildSettings({
       project: owningProject,
+      workspacePath: environment.context.workspacePath,
       target: targetModel,
       configuration: environment.configuration,
       platform: environment.platform,
