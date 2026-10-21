@@ -642,6 +642,17 @@ export function genericDefaults(context) {
     LD_RUNPATH_SEARCH_PATHS: productInfo.kind === "unit-test"
       ? " @loader_path/Frameworks @executable_path/Frameworks"
       : productInfo.kind === "application" ? "" : (productInfo.runpath ?? ""),
+    // Xcode's conditional deep/shallow bundle runpath selectors are distinct
+    // from the already-resolved LD_RUNPATH_SEARCH_PATHS target setting.
+    ...(platform === "iphonesimulator" && String(xcodeVersion) === "27.1" &&
+      productInfo.kind === "application" ? {
+        LD_RUNPATH_SEARCH_PATHS_YES: "@loader_path/../Frameworks",
+      } : {}),
+    ...(platform === "iphonesimulator" && String(xcodeVersion) === "27.1" &&
+      productInfo.kind === "unit-test" ? {
+        LD_RUNPATH_SEARCH_PATHS_SHALLOW_BUNDLE_NO: "@loader_path/../Frameworks",
+        LD_RUNPATH_SEARCH_PATHS_SHALLOW_BUNDLE_YES: "@loader_path/Frameworks",
+      } : {}),
     LD_EXPORT_GLOBAL_SYMBOLS: "YES",
     _SWIFT_EXPLICIT_MODULES_ALLOW_CXX_INTEROP: "YES",
     SWIFT_ENABLE_EXPLICIT_MODULES: "YES",
@@ -807,6 +818,12 @@ export function genericDefaults(context) {
       // SDK's counterpart. Duplicating the platform directory is not valid.
       SYSTEM_FRAMEWORK_SEARCH_PATHS: "  $(PLATFORM_DEVELOPER_LIBRARY_DIR)/Frameworks $(SDK_DIR)/Developer/Library/Frameworks",
       PRODUCT_TYPE_SWIFT_STDLIB_TOOL_FLAGS: "--scan-executable $(PLATFORM_DEVELOPER_USR_DIR)/lib/libXCTestSwiftSupport.dylib",
+      ...(platform === "iphonesimulator" && String(xcodeVersion) === "27.1" ? {
+        PRODUCT_SPECIFIC_LDFLAGS: "-Xlinker -needed_framework -Xlinker XCTest -framework XCTest -Xlinker -needed-lXCTestSwiftSupport -lXCTestSwiftSupport",
+        PRODUCT_SPECIFIC_LDFLAGS_NO_XCTEST_NO: "-Xlinker -needed_framework -Xlinker XCTest -framework XCTest -Xlinker -needed-lXCTestSwiftSupport -lXCTestSwiftSupport",
+        PRODUCT_TYPE_SWIFT_STDLIB_TOOL_FLAGS_NO_XCTEST_NO:
+          "--scan-executable $(PLATFORM_DEVELOPER_USR_DIR)/lib/libXCTestSwiftSupport.dylib",
+      } : {}),
     } : {}),
     // Installed SDK DefaultProperties can contain empty spec placeholders.
     // The following flags are verified for Xcode 27.1 simulator settings.
