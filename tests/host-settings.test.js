@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { hostAccountSettings } from "../src/settings/host.js";
+import { hostAccountSettings, hostXcodeCacheSettings } from "../src/settings/host.js";
 
 test("host account settings use discovered owner and group, not fixed identities", () => {
   const result = hostAccountSettings({
@@ -33,4 +33,42 @@ test("missing user metadata does not prevent build settings resolution", () => {
   });
   assert.equal(settings.ALTERNATE_OWNER, undefined);
   assert.equal(settings.UID, undefined);
+});
+
+test("Xcode cache settings are derived from Mac user cache and installed Xcode build", () => {
+  const root = "/var/folders/ab/cache-id/C/";
+  let calls = 0;
+  const settings = hostXcodeCacheSettings({
+    platform: "darwin", version: "27.1", build: "27A9275",
+    run(command, args) {
+      calls += 1;
+      assert.equal(command, "getconf");
+      assert.deepEqual(args, ["DARWIN_USER_CACHE_DIR"]);
+      return root + "\n";
+    },
+  });
+  assert.equal(calls, 1);
+  assert.equal(settings.CACHE_ROOT,
+    "/var/folders/ab/cache-id/C/com.apple.DeveloperTools/27.1-27A9275/Xcode");
+  assert.equal(settings.CCHROOT, settings.CACHE_ROOT);
+  assert.equal(settings.CLANG_MODULES_BUILD_SESSION_FILE,
+    "/var/folders/ab/cache-id/C/org.llvm.clang/ModuleCache.noindex/Session.modulevalidation");
+});
+
+test("Xcode cache settings remain absent without valid host evidence", () => {
+  assert.deepEqual(hostXcodeCacheSettings({
+    platform: "linux", version: "27.1", build: "27A9275",
+    run: () => { throw new Error("unexpected"); },
+  }), {});
+  assert.deepEqual(hostXcodeCacheSettings({
+    platform: "darwin", version: null, build: "27A9275",
+  }), {});
+  assert.deepEqual(hostXcodeCacheSettings({
+    platform: "darwin", version: "27.1", build: "27A9275",
+    run: () => { throw new Error("getconf unavailable"); },
+  }), {});
+  assert.deepEqual(hostXcodeCacheSettings({
+    platform: "darwin", version: "27.1", build: "27A9275",
+    run: () => "/unexpected/location\n",
+  }), {});
 });
