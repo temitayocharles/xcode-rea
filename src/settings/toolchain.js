@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
 import { basename, join } from "node:path";
 import { readPlistFile } from "../plist/index.js";
 
@@ -187,10 +187,11 @@ export function sdkDisplayName(canonicalName, version) {
  */
 export function resolveSdk({ developerDir, platform, requested = null, sdkVersion = null }) {
   if (requested && requested.endsWith(".sdk") && existsSync(requested)) {
-    const settings = readSdkSettings(requested);
+    const sdkPath = realpathSync(requested);
+    const settings = readSdkSettings(sdkPath);
     const canonical = settings?.CanonicalName ?? basename(requested, ".sdk");
     return {
-      path: requested,
+      path: sdkPath,
       root: canonical,
       name: sdkDisplayName(canonical, settings?.Version),
       version: settings?.Version ?? null,
@@ -206,8 +207,11 @@ export function resolveSdk({ developerDir, platform, requested = null, sdkVersio
     if (!existsSync(root)) continue;
     for (const name of readdirSync(root)) {
       if (!name.endsWith(".sdk")) continue;
-      const path = join(root, name);
-      if (!statSync(path).isDirectory()) continue;
+      const discoveredPath = join(root, name);
+      if (!statSync(discoveredPath).isDirectory()) continue;
+      // A versionless iPhoneSimulator.sdk is commonly a symlink to the
+      // concrete versioned SDK. Xcode reports the canonical SDK directory.
+      const path = realpathSync(discoveredPath);
       const settings = readSdkSettings(path);
       const canonical = settings?.CanonicalName ?? name.replace(/\.sdk$/, "");
       const version = settings?.Version ?? name.replace(/\.sdk$/, "").replace(canonical, "");
