@@ -120,7 +120,7 @@ Not automated, because it depends on what the app does:
   defaults and post-resolution fallback are now correctly scoped to the app;
   XCTest remains unaffected and higher-priority overrides retain precedence.
   This correction passes regressions but has NOT yet been measured on macOS;
-  the latest hardware checkpoint is 0/15. The current **133/133 Node regressions pass** in
+  the latest hardware checkpoint is 0/15. The current **134/134 Node regressions pass** in
   isolated validation. The remaining missing entries include SDK stat-cache
   and compilation-cache paths, Xcode-injected PATH, Swift protocol metadata,
   conditional runpaths, and Xcode-private internal state. Do not synthesize
@@ -146,3 +146,5 @@ is a hypothesis, not a result.
 - After the latest real 0/15 Mac checkpoint, six conditional product linker values were reconstructed from the Mac certifier's redacted **reference values**, scoped to Xcode 27.1 iOS Simulator application or hosted XCTest targets: `LD_RUNPATH_SEARCH_PATHS_YES`, `LD_RUNPATH_SEARCH_PATHS_SHALLOW_BUNDLE_NO/YES`, `PRODUCT_SPECIFIC_LDFLAGS`, `PRODUCT_SPECIFIC_LDFLAGS_NO_XCTEST_NO`, and `PRODUCT_TYPE_SWIFT_STDLIB_TOOL_FLAGS_NO_XCTEST_NO`. An added test protects product, version and explicit-override precedence; the isolated regression suite passes 132/132. The post-change Mac effect is not yet measured. Do not claim those six are certified until `certify:mac` passes.
 
 - After the 0/15 Mac result, additional privacy-safe SDKStatCaches and generated test-entry path **shape** diagnostics were added and pass 133/133 Node regressions. No reference values were copied into the implementation; no Mac measurement of these diagnostic changes yet. Remaining dynamic caches, Swift metadata, toolchain PATH, and opaque internal state remain unresolved. Do not release until all strict gates pass.
+
+- After the latest genuine Mac 0/15 result (133/133 tests), `COMPILATION_CACHE_CAS_PATH` is now derived from the selected `-derivedDataPath` root and `CompilationCache.noindex` for project-scoped explicit DerivedData builds; no fixed user paths. Regression tests cover independent DerivedData roots and command-line override precedence. The reconstructed branch passes 134/134 Node tests. **This CAS path has not yet been measured on Mac**, and its correctness must be confirmed by strict parity; do not assume the two missing occurrences are resolved. `SDK_STAT_CACHE_PATH`, generated XCTest entry, PATH, Swift constant protocols and private build identifiers remain unimplemented pending exact evidence.
