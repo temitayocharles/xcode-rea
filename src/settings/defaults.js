@@ -452,7 +452,9 @@ export function genericDefaults(context) {
     PBDEVELOPMENTPLIST_PATH: "$(WRAPPER_NAME)/pbdevelopment.plist",
     PKGINFO_PATH: "$(WRAPPER_NAME)/PkgInfo",
     PKGINFO_FILE_PATH: "$(TARGET_TEMP_DIR)/PkgInfo",
-    PRODUCT_SETTINGS_PATH: "$(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)",
+    // Xcode leaves this empty for generated Info.plist products; it is not
+    // the destination Info.plist path.
+    PRODUCT_SETTINGS_PATH: "$(INFOPLIST_FILE)",
     VERSIONPLIST_PATH: "$(WRAPPER_NAME)/version.plist",
     WRAPPER_SUFFIX: productInfo.wrapperExtension ? `.${productInfo.wrapperExtension}` : "",
     EXTENSIONS_FOLDER_PATH: "$(CONTENTS_FOLDER_PATH)/Extensions",
@@ -542,9 +544,11 @@ export function genericDefaults(context) {
     GCC_INLINES_ARE_PRIVATE_EXTERN: "YES",
     GCC_OBJC_LEGACY_DISPATCH: "YES",
     GCC_WARN_64_TO_32_BIT_CONVERSION: "NO",
+    // Do not prefill the app runpath: app targets commonly append their
+    // own value after $(inherited). A default app runpath duplicates it.
     LD_RUNPATH_SEARCH_PATHS: productInfo.kind === "unit-test"
-      ? "@loader_path/Frameworks @executable_path/Frameworks"
-      : (productInfo.runpath ?? ""),
+      ? " @loader_path/Frameworks @executable_path/Frameworks"
+      : productInfo.kind === "application" ? "" : (productInfo.runpath ?? ""),
     LD_EXPORT_GLOBAL_SYMBOLS: "YES",
     _SWIFT_EXPLICIT_MODULES_ALLOW_CXX_INTEROP: "YES",
     SWIFT_ENABLE_EXPLICIT_MODULES: "YES",
@@ -552,7 +556,7 @@ export function genericDefaults(context) {
     TOOLCHAINS: "com.apple.dt.toolchain.XcodeDefault",
     FRAMEWORK_FLAG_PREFIX: "-framework",
     ENABLE_THREAD_SANITIZER: "NO",
-    CLANG_CACHE_FINE_GRAINED_OUTPUTS: "NO",
+    CLANG_CACHE_FINE_GRAINED_OUTPUTS: "YES",
     JAVA_APP_STUB: "/System/Library/Frameworks/JavaVM.framework/Resources/MacOS/JavaApplicationStub",
     SYSTEM_LIBRARY_DIR: "/System/Library",
     LOCAL_LIBRARY_DIR: "/Library",
@@ -577,7 +581,9 @@ export function genericDefaults(context) {
     LIBRARY_DEXT_INSTALL_PATH: "/Library/DriverExtensions",
     LIBRARY_KEXT_INSTALL_PATH: "/Library/Extensions",
     INSTALL_PATH: productInfo.kind === "application" ? "/Applications" : "",
-    INSTALL_DIR: productInfo.kind === "application" ? "/tmp/$(PRODUCT_NAME).dst/Applications" : "/tmp/$(PRODUCT_NAME).dst",
+    INSTALL_DIR: productInfo.kind === "application"
+      ? "/tmp/$(PRODUCT_NAME).dst/Applications"
+      : `/tmp/${project.name}.dst`,
     FRAMEWORK_SEARCH_PATHS: "$(BUILT_PRODUCTS_DIR) $(inherited)",
     HEADER_SEARCH_PATHS: "$(BUILT_PRODUCTS_DIR)/include $(inherited)",
     LIBRARY_SEARCH_PATHS: "$(BUILT_PRODUCTS_DIR) $(inherited)",
@@ -657,6 +663,11 @@ export function genericDefaults(context) {
       developerDir,
     }),
     ...bundleLayoutDefaults(platform, productInfo),
+    // Installed SDK DefaultProperties can contain empty spec placeholders.
+    // The following flags are verified for Xcode 27.1 simulator settings.
+    SWIFT_ENABLE_EXPLICIT_MODULES: "YES",
+    _SWIFT_EXPLICIT_MODULES_ALLOW_CXX_INTEROP: "YES",
+    CLANG_CACHE_FINE_GRAINED_OUTPUTS: "YES",
     // SDK DefaultProperties can declare requirements for device signing. The
     // simulator query must not inherit an unconditional device entitlements flag.
     ...(platform.endsWith("simulator") ? {
