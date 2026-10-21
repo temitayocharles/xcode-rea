@@ -4,6 +4,10 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { installedPlatformProperties, platformDefaults } from "../src/settings/defaults.js";
+import { resolveBuildSettings } from "../src/settings/resolver.js";
+import { loadProject } from "../src/xcode/pbxproj.js";
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
 
 test("installed platform metadata supplies defaults and build version without overriding SDK context", (t) => {
   const developerDir = mkdtempSync(join(tmpdir(), "xcl-platform-meta-"));
@@ -44,9 +48,30 @@ test("installed platform metadata supplies defaults and build version without ov
     },
   });
   assert.equal(defaults.SDKROOT, "/virtual/SDKs/iPhoneSimulator27.1.sdk");
-  assert.equal(defaults.PLATFORM_USES_DSYMS, "YES");
+  assert.equal(defaults.PLATFORM_USES_DSYMS, undefined);
   assert.equal(defaults.SDK_PRODUCT_BUILD_VERSION, "24F123");
-  assert.equal(defaults.PLATFORM_PRODUCT_BUILD_VERSION, "27A9275");
+
+  const sourceDir = dirname(fileURLToPath(import.meta.url));
+  const project = loadProject(join(sourceDir, "fixtures", "HelloXcode", "HelloXcode.xcodeproj"));
+  const target = project.targetByName("HelloXcode");
+  const result = resolveBuildSettings({
+    project, target, configuration: "Debug", platform: "iphonesimulator",
+    arch: "arm64", hostArch: "arm64", sdk: {
+      path: "/virtual/SDKs/iPhoneSimulator27.1.sdk",
+      name: "iphonesimulator27.1",
+      version: "27.1",
+      root: "iphonesimulator",
+      productBuildVersion: "24F123",
+      defaultProperties: {},
+    },
+    derivedDataPath: "/tmp/xcl-platform-metadata-output", developerDir,
+  });
+  assert.equal(result.settings.PLATFORM_USES_DSYMS, "YES");
+  assert.equal(result.settings.PLATFORM_PRODUCT_BUILD_VERSION, "27A9275");
+  assert.equal(result.settings.SDKROOT, "/virtual/SDKs/iPhoneSimulator27.1.sdk");
+  assert.equal(result.settings.XCL_PLATFORM_ONLY, "ARCH-CONDITIONAL");
+  assert.equal(result.settings.COMPLEX, undefined);
+  assert.ok(result.layers.some((layer) => layer.name === "xcode-platform-defaults"));
 });
 
 test("unknown or incomplete platform metadata never fabricates a build version", () => {
