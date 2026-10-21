@@ -17,6 +17,7 @@ export const PRODUCT_TYPES = Object.freeze({
       ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: "AccentColor",
       // Default app product settings; an explicit target choice still wins.
       ENABLE_ON_DEMAND_RESOURCES: "YES",
+      SUPPORTS_ON_DEMAND_RESOURCES: "YES",
       GENERATE_PKGINFO_FILE: "YES",
       SUPPORTS_MACCATALYST: "NO",
     },
