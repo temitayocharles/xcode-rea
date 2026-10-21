@@ -109,20 +109,21 @@ Not automated, because it depends on what the app does:
 
 ## What these gates do not prove
 
-- On macOS / Xcode 27.1, the HelloXcode fixture **passed 117
+- On macOS / Xcode 27.1, the HelloXcode fixture **passed 119
   regression tests**, compiled and packaged the real simulator app, passed
   code-signing/arm64 verification, and matched project structure. The last
-  completed hardware settings gate still failed: **25 differing values and
-  153 missing occurrences across two targets**.
-- Subsequent repairs use the actual observed Xcode values for Swift explicit
-  modules, clang caching, effective language mode, generated Info.plist paths,
-  runpaths, XCTest framework/toolchain search paths, non-global test stripping,
-  installed/virtual Xcode 27 platforms, and host macOS version fields.
-  Product-specific behavior remains subordinate to explicit build overrides.
-  The expanded **119/119 Node regressions pass** in isolated validation;
-  hardware effects have NOT yet been measured on macOS. The certifier prints
-  redacted value comparisons and keeps raw evidence local. Strict parity is
-  still required for release, with no Xcode-private keys fabricated or ignored.
+  completed hardware settings gate still failed: **3 differing values and
+  153 missing occurrences across two targets** (PROJECT_GUID x2 and
+  SYSTEM_FRAMEWORK_SEARCH_PATHS x1).
+- Subsequent repairs derive PROJECT_GUID using MD5 of the .xcodeproj bundle
+  name, implement more documented developer and shallow/deep-bundle path
+  defaults, and derive optimization state from the actual target configuration.
+  The Xcode value-redactor now preserves public device/simulator platform
+  identifiers so masked framework paths can be disambiguated without
+  revealing private directory prefixes. The expanded **121/121 Node
+  regressions pass** in isolated validation. These changes have NOT yet been
+  measured by Xcode on macOS. Strict parity remains mandatory, including the
+  153 missing values; no Xcode-private settings are fabricated or suppressed.
 - Missing settings now include their Xcode reference values in the detailed
   JSON report. The complete artifact can contain local paths and identities;
   review it before sharing or committing.
