@@ -7,7 +7,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { summarizeSettingsReport } from "../src/compat/settings-summary.js";
+import { summarizeSettingsReport, summarizeValueDifferences } from "../src/compat/settings-summary.js";
 
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const reportPath = join(root, "docs/verification/macOS-final.json");
@@ -44,6 +44,8 @@ if (process.platform !== "darwin") {
         if (failedSettings) {
           console.log("\n== All remaining mismatches, grouped by setting name ==");
           console.log(summarizeSettingsReport(report, { limit: 25 }));
+          console.log("\n== Redacted expected-vs-actual values for unresolved mismatches ==");
+          console.log(summarizeValueDifferences(report, { limit: 45 }));
         }
         console.log(`\nFull report: ${reportPath}`);
       } catch (error) {
