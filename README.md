@@ -24,7 +24,7 @@ node bin/xcl.mjs -project ~/Projects/Hello/Hello.xcodeproj -scheme Hello \
 > Status: **0.1.0 — macOS build and signing verified, settings parity incomplete.**
 >
 > On macOS 27.0.1 / Xcode 27.1, the Apple Silicon HelloXcode fixture passed
-> **132/132 Node tests**, project structure, real simulator compilation, bundle
+> **133/133 Node tests**, project structure, real simulator compilation, bundle
 > signing, and arm64 architecture validation. The latest hardware run has
 > **0 differing values and 15 missing setting occurrences** across the app
 > and test targets. These are occurrences, not unique setting keys. Subsequent
@@ -322,7 +322,7 @@ silently disappearing from a commit.
 ## Development
 
 ```bash
-npm test                    # 133 tests, no dependencies, ~3 seconds
+npm test                    # 134 tests, no dependencies, ~3 seconds
 npm run demo                # list the fixture project
 npm run demo:settings       # resolve settings for the fixture
 npm run demo:plan           # print a build plan
