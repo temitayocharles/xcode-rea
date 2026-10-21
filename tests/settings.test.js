@@ -110,6 +110,7 @@ test("HelloXcode Debug simulator settings", () => {
   assert.equal(settings.ARCHS, "arm64 x86_64");
   assert.equal(settings.ONLY_ACTIVE_ARCH, "YES");
   assert.equal(settings.SWIFT_OPTIMIZATION_LEVEL, "-Onone");
+  assert.equal(settings.IS_UNOPTIMIZED_BUILD, "YES");
   assert.equal(settings.ENABLE_TESTABILITY, "YES");
   assert.equal(settings.SWIFT_VERSION, "5.0");
   assert.equal(settings.PRODUCT_NAME, "HelloXcode");
@@ -174,6 +175,24 @@ test("Xcode 27.1 simulator settings are derived from context, not fixture paths"
     "/tmp/DerivedData/Build/Intermediates.noindex/GeneratedModuleMaps-iphonesimulator");
   assert.equal(settings.FRAMEWORK_SEARCH_PATHS, settings.BUILT_PRODUCTS_DIR + " ");
   assert.equal(settings.HEADER_SEARCH_PATHS, settings.BUILT_PRODUCTS_DIR + "/include ");
+});
+
+test("IS_UNOPTIMIZED_BUILD follows resolved compiler settings, not configuration names", () => {
+  const projectPath = fixture("HelloXcode/HelloXcode.xcodeproj");
+  const release = settingsFor({
+    projectPath, targetName: "HelloXcode", configuration: "Release",
+  }).settings;
+  assert.equal(release.IS_UNOPTIMIZED_BUILD, "NO");
+  const custom = settingsFor({
+    projectPath, targetName: "HelloXcode",
+    overrides: { SWIFT_OPTIMIZATION_LEVEL: "-O" },
+  }).settings;
+  assert.equal(custom.IS_UNOPTIMIZED_BUILD, "NO");
+  const explicit = settingsFor({
+    projectPath, targetName: "HelloXcode",
+    overrides: { IS_UNOPTIMIZED_BUILD: "CUSTOM" },
+  }).settings;
+  assert.equal(explicit.IS_UNOPTIMIZED_BUILD, "CUSTOM");
 });
 
 test("hosted XCTest output inherits its host application's PlugIns directory", () => {
