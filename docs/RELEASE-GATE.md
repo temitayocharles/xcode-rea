@@ -109,22 +109,23 @@ Not automated, because it depends on what the app does:
 
 ## What these gates do not prove
 
-- On macOS / Xcode 27.1, the HelloXcode fixture **passed 124
+- On macOS / Xcode 27.1, the HelloXcode fixture **passed 126
   regression tests**, compiled and packaged the real simulator app, passed
   code-signing/arm64 verification, and matched project structure. The last
   completed hardware settings gate still failed: **zero value mismatches and
-  80 missing settings** across two targets (41 app, 39 XCTest). This is
-  authentic Mac evidence; zero value differences alone is not full parity.
-- Subsequently implemented architecture-set aliases, effective ONLY_ARCH and
-  recommended iOS deployment settings, RPATH_ORIGIN, non-sensitive platform/
-  compiler policy flags and application Debug dylib setting. Cross-platform
-  deployment defaults measured in this Xcode 27.1 report are **explicitly
-  version-scoped** rather than applied to other Xcode versions. The expanded
-  **126/126 Node regressions pass in isolated validation**, but their effect
-  has NOT been measured on macOS. Unverified provisioning, process PATH, cache
-  stat files, opaque Swift protocol lists and Xcode build-system internals
-  remain missing rather than fabricated, ignored or copied from reference
-  output. The strict settings gate remains the release blocker.
+  41 missing settings** across two targets (21 app, 20 XCTest). This is
+  authentic Mac evidence, not a post-fix estimate.
+- Subsequently added WORKSPACE_DIR from the selected project or explicit
+  workspace, stable deep-bundle _WRAPPER suffixes, and simulator-only
+  PROVISIONING_PROFILE_REQUIRED/SUPPORTED with source-grounded defaults.
+  The certifier now shows only Boolean provisioning capabilities and structural
+  categories of SDK-stat/compilation cache paths, never usernames, digests,
+  process PATH or signing identities. **128/128 Node regressions pass in an
+  isolated checkout**. The changes have NOT yet been measured by macOS.
+  Nonportable provisioning conditionals, runtime-generated cache paths,
+  Swift protocol metadata and Xcode serialization internals remain unresolved
+  rather than guessed or excluded. Strict settings parity stays the release
+  blocker.
 - Missing settings now include their Xcode reference values in the detailed
   JSON report. The complete artifact can contain local paths and identities;
   review it before sharing or committing.
