@@ -52,6 +52,12 @@ test("value diagnosis keeps comparison shape while masking absolute paths and op
   assert.match(output, /absolute:Library\/Frameworks/);
   assert.match(output, /opaque-id/);
   assert.doesNotMatch(output, /Users\/account/);
+  const device = redactSettingValue("  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks");
+  const simulator = redactSettingValue("  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks");
+  assert.match(device, /platform:iPhoneOS.platform;absolute:Library\/Frameworks/);
+  assert.match(simulator, /platform:iPhoneSimulator.platform;absolute:Library\/Frameworks/);
+  assert.notEqual(device, simulator);
+  assert.doesNotMatch(simulator, /Applications\/Xcode/);
   assert.doesNotMatch(output, /123456789012345678901234/);
   assert.ok(redactSettingValue("") === "<empty>");
   assert.throws(() => summarizeValueDifferences(report, { limit: 0 }), /limit must/);
