@@ -78,8 +78,9 @@ node scripts/macos-verify.mjs \
 ```
 
 For a failed settings gate, the JSON report includes the compared/missing/differing
-counts and a complete `differences` array with target, key, and (for value
-mismatches) both values. Its `lines` summary is deliberately limited to
+counts and a complete `differences` array with target, key, and Xcode's
+expected value even for missing settings (plus `xcl`'s value where
+different). Its `lines` summary is deliberately limited to
 avoid overwhelming the console. Review the report for local paths, identities,
 and other machine-specific details before sharing it or committing it.
 
@@ -108,15 +109,18 @@ Not automated, because it depends on what the app does:
 
 ## What these gates do not prove
 
-- On macOS 27.0.1 / Xcode 27.1 the HelloXcode fixture **did** compile,
-  package and pass code-signing/arm64 verification with the corrected engine.
-  The project structure comparison also passed. The remaining differential
-  settings gate failed: **52 value differences and 895 missing occurrences
-  across two targets**. This is not yet full release certification.
-- Specification discovery was subsequently expanded to known Xcode
-  `Plug-ins` and SwiftBuild framework roots; the new discovery code is
-  unit-tested, but its effect on this machine's parity counts remains
-  unverified until a fresh hardware run.
+- On macOS 27.0.1 / Xcode 27.1, the HelloXcode fixture **passed 97
+  regression tests**, compiled, packaged, passed code-signing/arm64
+  verification, and matched project structure. The last measured settings
+  gate still failed: **134 differing values and 248 missing occurrences
+  across two targets**.
+- Subsequent corrections cover derived compiler/product paths, the hosted
+  XCTest bundle, SDK and locale metadata, and binary Info.plist output.
+  The expanded tests pass outside macOS; these new corrections require
+  another genuine macOS certification run before claiming their effect.
+- Missing settings now include their Xcode reference values in the detailed
+  JSON report. The complete artifact can contain local paths and identities;
+  review it before sharing or committing.
 - One successful build does not imply compatibility for every product type,
   configuration or SDK. Treat each new project shape as unverified until it
   passes gate 3.
