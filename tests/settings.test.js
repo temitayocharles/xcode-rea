@@ -113,6 +113,14 @@ test("Xcode 27.1 simulator settings are derived from context, not fixture paths"
   assert.equal(settings.PER_VARIANT_OBJECT_FILE_DIR, settings.OBJECT_FILE_DIR_normal);
   assert.equal(settings.SYSTEM_ADMIN_APPS_DIR, "/Applications/Utilities");
   assert.equal(settings.SYSTEM_APPS_DIR, "/Applications");
+  assert.equal(settings.SYSTEM_CORE_SERVICES_DIR, "/System/Library/CoreServices");
+  assert.equal(settings.SYSTEM_DEMOS_DIR, "/Applications/Extras");
+  assert.equal(settings.LOCAL_DEVELOPER_DIR, "/Library/Developer");
+  assert.equal(settings.OS, "MACOS");
+  assert.equal(settings.SYSTEM_DEVELOPER_DIR, settings.DEVELOPER_DIR);
+  assert.equal(settings.SYSTEM_DEVELOPER_APPS_DIR, settings.DEVELOPER_APPLICATIONS_DIR);
+  assert.equal(settings.SYSTEM_DEVELOPER_BIN_DIR, settings.DEVELOPER_BIN_DIR);
+  assert.equal(settings.SYSTEM_DEVELOPER_TOOLS, settings.DEVELOPER_TOOLS_DIR);
   assert.equal(settings.PRODUCT_SETTINGS_PATH,
     settings.TARGET_BUILD_DIR + "/HelloXcode.app/Info.plist");
   assert.equal(settings.HOST_PLATFORM, "macosx");
