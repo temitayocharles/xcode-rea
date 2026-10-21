@@ -24,12 +24,12 @@ node bin/xcl.mjs -project ~/Projects/Hello/Hello.xcodeproj -scheme Hello \
 > Status: **0.1.0 — macOS build and signing verified, settings parity incomplete.**
 >
 > On macOS 27.0.1 / Xcode 27.1, the Apple Silicon HelloXcode fixture passed
-> **128/128 Node tests**, project structure, real simulator compilation, bundle
+> **131/131 Node tests**, project structure, real simulator compilation, bundle
 > signing, and arm64 architecture validation. The latest hardware run has
 > **0 differing values and 21 missing setting occurrences** across the app
 > and test targets. These are occurrences, not unique setting keys. Subsequent
-> hosted XCTest simulator-signing conditionals are regression-tested but
-> have not yet been certified on Mac hardware.
+> app/XCTest conditional linker defaults are tested in **132 Node tests**,
+> but have not yet been certified on Mac hardware.
 > See the [release gate](docs/RELEASE-GATE.md) for evidence boundaries.
 >
 > Test execution, Swift Package resolution, archives/notarization and Interface
@@ -322,7 +322,7 @@ silently disappearing from a commit.
 ## Development
 
 ```bash
-npm test                    # 131 tests, no dependencies, ~3 seconds
+npm test                    # 132 tests, no dependencies, ~3 seconds
 npm run demo                # list the fixture project
 npm run demo:settings       # resolve settings for the fixture
 npm run demo:plan           # print a build plan
