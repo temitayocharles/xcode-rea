@@ -496,7 +496,9 @@ export function genericDefaults(context) {
     GCC_INLINES_ARE_PRIVATE_EXTERN: "YES",
     GCC_OBJC_LEGACY_DISPATCH: "YES",
     GCC_WARN_64_TO_32_BIT_CONVERSION: "NO",
-    LD_RUNPATH_SEARCH_PATHS: "$(inherited)",
+    LD_RUNPATH_SEARCH_PATHS: productInfo.kind === "unit-test"
+      ? "@loader_path/Frameworks @executable_path/Frameworks"
+      : (productInfo.runpath ?? ""),
     LD_EXPORT_GLOBAL_SYMBOLS: "YES",
     _SWIFT_EXPLICIT_MODULES_ALLOW_CXX_INTEROP: "YES",
     SWIFT_ENABLE_EXPLICIT_MODULES: "YES",
@@ -602,6 +604,12 @@ export function genericDefaults(context) {
       developerDir,
     }),
     ...bundleLayoutDefaults(platform, productInfo),
+    // SDK DefaultProperties can declare requirements for device signing. The
+    // simulator query must not inherit an unconditional device entitlements flag.
+    ...(platform.endsWith("simulator") ? {
+      ENTITLEMENTS_REQUIRED: "NO",
+      SWIFTC_PASS_SYSROOT: "NO",
+    } : {}),
     ...hostAccountSettings(),
   };
 }
