@@ -80,7 +80,12 @@ export function redactSettingValue(value) {
     /(^|[\s="'])(\/(?:[^\s"'=]+\/?)+)/g,
     (_match, prefix, path) => {
       const components = path.split("/").filter(Boolean);
-      return prefix + "<absolute:" + components.slice(-2).join("/") + ">";
+      // Preserve the public Apple platform bundle name: otherwise device
+      // versus simulator SDK frameworks appear identical after redaction.
+      const platformMatch = /\/Platforms\/([A-Za-z0-9]+\.platform)\//.exec(path);
+      const platformLabel = platformMatch ? `platform:${platformMatch[1]};` : "";
+      return prefix + "<" + platformLabel + "absolute:" +
+        components.slice(-2).join("/") + ">";
     },
   );
   return pathsRedacted.length <= 220
