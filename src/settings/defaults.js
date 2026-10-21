@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { homedir } from "node:os";
 import { readPlistFile } from "../plist/index.js";
 import { basename, dirname, join } from "node:path";
@@ -11,6 +12,15 @@ import { hostAccountSettings, hostXcodeCacheSettings, hostMacOSVersionSettings }
  * deterministic SHA-256-derived suffix. This only affects the default location,
  * never the contents of a build. Use `-derivedDataPath` for exact parity.
  */
+/** Xcode identifies a PBX project by MD5 of its .xcodeproj bundle name. */
+export function xcodeProjectGuid(projectPath) {
+  const path = String(projectPath ?? "");
+  const bundleName = basename(path) === "project.pbxproj"
+    ? basename(dirname(path)) : basename(path);
+  if (!bundleName.endsWith(".xcodeproj")) return "";
+  return createHash("md5").update(bundleName).digest("hex");
+}
+
 export function defaultDerivedDataPath(projectPath) {
   const name = basename(projectPath).replace(/\.xcodeproj$/, "");
   const hash = BigInt(`0x${sha256(projectPath).slice(0, 16)}`)
@@ -483,7 +493,7 @@ export function genericDefaults(context) {
     PROJECT_FILE_PATH: projectPath,
     PROJECT_NAME: project.name,
     PROJECT: project.name,
-    PROJECT_GUID: project.rootObject ?? "",
+    PROJECT_GUID: xcodeProjectGuid(projectPath),
     TARGET_NAME: target?.name ?? project.name,
     TARGETNAME: target?.name ?? project.name,
     PRODUCT_NAME: productName,
