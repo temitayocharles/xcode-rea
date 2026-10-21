@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { loadProject } from "../src/xcode/pbxproj.js";
 import { expandSettings, matchConditions, resolveBuildSettings } from "../src/settings/resolver.js";
-import { genericDefaults, defaultDerivedDataPath, sdkVersionSettings, xcodeProjectGuid, derivedArchitectureFileLists } from "../src/settings/defaults.js";
+import { genericDefaults, defaultDerivedDataPath, sdkVersionSettings, xcodeProjectGuid, derivedArchitectureFileLists, xcode271ObservedDeploymentDefaults } from "../src/settings/defaults.js";
 import { productTypeInfo } from "../src/settings/productTypes.js";
 import { parsePlist } from "../src/plist/index.js";
 
@@ -67,6 +67,38 @@ test("SDK version numbers follow Xcode's major-minor-patch format", () => {
     SDK_VERSION_MINOR: "170201",
   });
   assert.deepEqual(sdkVersionSettings("unknown"), {});
+});
+
+test("measured cross-platform deployment defaults apply to Xcode 27.1 only", () => {
+  const measured = xcode271ObservedDeploymentDefaults("27.1");
+  assert.deepEqual(measured, {
+    ANDROID_DEPLOYMENT_TARGET: "21.0",
+    DRIVERKIT_DEPLOYMENT_TARGET: "27.0",
+    MACOSX_DEPLOYMENT_TARGET: "27.0",
+    TVOS_DEPLOYMENT_TARGET: "27.0",
+    WATCHOS_DEPLOYMENT_TARGET: "27.0",
+    XROS_DEPLOYMENT_TARGET: "27.0",
+  });
+  for (const version of [null, "26.4", "27.0", "27.2"]) {
+    assert.deepEqual(xcode271ObservedDeploymentDefaults(version), {});
+  }
+  const project = loadProject(fixture("HelloXcode/HelloXcode.xcodeproj"));
+  const target = project.targetByName("HelloXcode");
+  const options = {
+    project, target, configuration: "Debug", platform: "iphonesimulator",
+    sdk: { path: "/SDK/iPhoneSimulator27.1.sdk", name: "iphonesimulator27.1",
+      version: "27.1", root: "iphonesimulator", defaultProperties: {} },
+    arch: "arm64", hostArch: "arm64", derivedDataPath: "/tmp/xcl-measured",
+    developerDir: "/Developer", xcodeVersion: "27.1",
+  };
+  const resolved = resolveBuildSettings(options).settings;
+  for (const [name, value] of Object.entries(measured)) {
+    assert.equal(resolved[name], value, name);
+  }
+  const overridden = resolveBuildSettings({
+    ...options, overrides: { DRIVERKIT_DEPLOYMENT_TARGET: "custom-value" },
+  }).settings;
+  assert.equal(overridden.DRIVERKIT_DEPLOYMENT_TARGET, "custom-value");
 });
 
 test("HelloXcode Debug simulator settings", () => {
