@@ -83,6 +83,25 @@ test("HelloXcode Debug simulator settings", () => {
   assert.equal(settings.PUBLIC_HEADERS_FOLDER_PATH, "HelloXcode.app/Headers");
   assert.equal(settings.PRIVATE_HEADERS_FOLDER_PATH, "HelloXcode.app/PrivateHeaders");
   assert.equal(settings.SHALLOW_BUNDLE, "YES");
+  assert.equal(settings.SHALLOW_BUNDLE_TRIPLE, "ios-simulator");
+  assert.equal(settings.SHALLOW_BUNDLE_ios_macabi, "NO");
+  assert.equal(settings.SHALLOW_BUNDLE_macos, "NO");
+  assert.equal(settings.CONTENTS_FOLDER_PATH_SHALLOW_BUNDLE_NO, "HelloXcode.app/Contents");
+  assert.equal(settings.CONTENTS_FOLDER_PATH_SHALLOW_BUNDLE_YES, "HelloXcode.app");
+  assert.equal(settings.EXECUTABLE_FOLDER_PATH_SHALLOW_BUNDLE_NO, "HelloXcode.app/MacOS");
+  assert.equal(settings.EXECUTABLE_FOLDER_PATH_SHALLOW_BUNDLE_YES, "HelloXcode.app");
+  assert.equal(settings.SYSTEM_DEVELOPER_DEMOS_DIR,
+    settings.DEVELOPER_DIR + "/Applications/Utilities/Built Examples");
+  assert.equal(settings.SYSTEM_DEVELOPER_DOC_DIR,
+    settings.DEVELOPER_DIR + "/ADC Reference Library");
+  assert.equal(settings.SYSTEM_DEVELOPER_GRAPHICS_TOOLS_DIR,
+    settings.DEVELOPER_DIR + "/Applications/Graphics Tools");
+  assert.equal(settings.SYSTEM_DEVELOPER_JAVA_TOOLS_DIR,
+    settings.DEVELOPER_DIR + "/Applications/Java Tools");
+  assert.equal(settings.SYSTEM_DEVELOPER_PERFORMANCE_TOOLS_DIR,
+    settings.DEVELOPER_DIR + "/Applications/Performance Tools");
+  assert.equal(settings.SYSTEM_DEVELOPER_USR_DIR, settings.DEVELOPER_USR_DIR);
+  assert.equal(settings.SYSTEM_DOCUMENTATION_DIR, "/Library/Documentation");
   assert.equal(settings.LOCALIZED_RESOURCES_FOLDER_PATH, "HelloXcode.app/en.lproj");
   assert.equal(settings.DEVELOPMENT_LANGUAGE, "en");
   const fixtureProject = loadProject(fixture("HelloXcode/HelloXcode.xcodeproj"));
