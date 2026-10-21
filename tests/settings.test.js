@@ -70,6 +70,9 @@ test("HelloXcode Debug simulator settings", () => {
   assert.ok(settings.FIXED_FILES_DIR.endsWith("/HelloXcode.build/FixedFiles"));
   assert.equal(settings.DWARF_DSYM_FOLDER_PATH, settings.BUILT_PRODUCTS_DIR);
   assert.equal(settings.EXECUTABLE_FOLDER_PATH, "HelloXcode.app");
+  assert.equal(settings.PUBLIC_HEADERS_FOLDER_PATH, "HelloXcode.app/Headers");
+  assert.equal(settings.PRIVATE_HEADERS_FOLDER_PATH, "HelloXcode.app/PrivateHeaders");
+  assert.equal(settings.SHALLOW_BUNDLE, "YES");
   assert.equal(settings.LOCALIZED_RESOURCES_FOLDER_PATH, "HelloXcode.app/en.lproj");
   assert.equal(settings.DEVELOPMENT_LANGUAGE, "en");
   const fixtureProject = loadProject(fixture("HelloXcode/HelloXcode.xcodeproj"));
@@ -235,6 +238,9 @@ test("macOS app uses a Contents bundle layout", () => {
   assert.equal(settings.INFOPLIST_PATH, "HelloXcode.app/Contents/Info.plist");
   assert.equal(settings.UNLOCALIZED_RESOURCES_FOLDER_PATH, "HelloXcode.app/Contents/Resources");
   assert.equal(settings.FRAMEWORKS_FOLDER_PATH, "HelloXcode.app/Contents/Frameworks");
+  assert.equal(settings.PUBLIC_HEADERS_FOLDER_PATH, "HelloXcode.app/Contents/Headers");
+  assert.equal(settings.PRIVATE_HEADERS_FOLDER_PATH, "HelloXcode.app/Contents/PrivateHeaders");
+  assert.equal(settings.SHALLOW_BUNDLE, "NO");
 });
 
 test("xcconfig include chains and precedence", () => {
