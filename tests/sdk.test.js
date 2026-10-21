@@ -56,3 +56,46 @@ test("SDK alias paths resolve to the concrete installed version", (t) => {
     requested: alias });
   assert.equal(explicit.path, realpathSync(canonical));
 });
+
+
+test("versioned physical SDK wins over unversioned sibling with matching metadata", (t) => {
+  const directory = mkdtempSync(join(tmpdir(), "xcl-sdk-physical-"));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const root = join(directory, "Platforms", "iPhoneSimulator.platform", "Developer", "SDKs");
+  const versionless = join(root, "iPhoneSimulator.sdk");
+  const versioned = join(root, "iPhoneSimulator27.1.sdk");
+  const metadata = `<?xml version="1.0"?><plist version="1.0"><dict>
+    <key>CanonicalName</key><string>iphonesimulator27.1</string>
+    <key>Version</key><string>27.1</string></dict></plist>`;
+  for (const dir of [versionless, versioned]) {
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, "SDKSettings.plist"), metadata);
+  }
+  assert.equal(resolveSdk({
+    developerDir: directory, platform: "iphonesimulator", requested: "iphonesimulator",
+  }).path, realpathSync(versioned));
+  assert.equal(resolveSdk({
+    developerDir: directory, platform: "iphonesimulator", requested: versionless,
+  }).path, realpathSync(versioned));
+  assert.ok(listSdks({ developerDir: directory, platform: "iphonesimulator" })
+    .every((sdk) => sdk.path === realpathSync(versioned)));
+});
+
+test("versionless SDK with different identity is never remapped to another SDK", (t) => {
+  const directory = mkdtempSync(join(tmpdir(), "xcl-sdk-identity-"));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const root = join(directory, "Platforms", "iPhoneSimulator.platform", "Developer", "SDKs");
+  const versionless = join(root, "iPhoneSimulator.sdk");
+  const versioned = join(root, "iPhoneSimulator27.1.sdk");
+  mkdirSync(versionless, { recursive: true });
+  mkdirSync(versioned, { recursive: true });
+  writeFileSync(join(versionless, "SDKSettings.plist"), `<?xml version="1.0"?>
+    <plist version="1.0"><dict><key>CanonicalName</key><string>iphonesimulator</string>
+    <key>Version</key><string>27.1</string></dict></plist>`);
+  writeFileSync(join(versioned, "SDKSettings.plist"), `<?xml version="1.0"?>
+    <plist version="1.0"><dict><key>CanonicalName</key><string>iphoneos</string>
+    <key>Version</key><string>27.1</string></dict></plist>`);
+  assert.equal(resolveSdk({
+    developerDir: directory, platform: "iphonesimulator", requested: versionless,
+  }).path, realpathSync(versionless));
+});
