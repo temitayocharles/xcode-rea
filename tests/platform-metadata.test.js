@@ -1,9 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { installedPlatformProperties, platformDefaults } from "../src/settings/defaults.js";
+import { installedPlatformEnvironment } from "../src/settings/toolchain.js";
 import { resolveBuildSettings } from "../src/settings/resolver.js";
 import { loadProject } from "../src/xcode/pbxproj.js";
 import { fileURLToPath } from "node:url";
@@ -79,4 +80,47 @@ test("installed platform metadata supplies defaults and build version without ov
 test("unknown or incomplete platform metadata never fabricates a build version", () => {
   assert.deepEqual(installedPlatformProperties("/tmp/xcl-metadata-does-not-exist", "iphonesimulator"), {});
   assert.deepEqual(installedPlatformProperties(null, "iphoneos"), {});
+});
+
+test("installed simulator platforms derive a device counterpart and SYSROOT from installed SDK metadata", (t) => {
+  const developerDir = mkdtempSync(join(tmpdir(), "xcl-platform-counterpart-"));
+  t.after(() => rmSync(developerDir, { recursive: true, force: true }));
+  const device = join(developerDir, "Platforms", "iPhoneOS.platform");
+  const simulator = join(developerDir, "Platforms", "iPhoneSimulator.platform");
+  const sdkDir = join(device, "Developer", "SDKs", "iPhoneOS27.1.sdk");
+  mkdirSync(sdkDir, { recursive: true });
+  mkdirSync(simulator, { recursive: true });
+  writeFileSync(join(sdkDir, "SDKSettings.plist"), `<?xml version="1.0"?>
+  <plist version="1.0"><dict><key>CanonicalName</key><string>iphoneos</string>
+  <key>Version</key><string>27.1</string></dict></plist>`);
+  const expectedRoot = "/virtual/SDKs/iPhoneSimulator27.1.sdk";
+  const info = installedPlatformEnvironment({
+    developerDir, platform: "iphonesimulator", sdk: { path: expectedRoot },
+    hostPlatform: "linux",
+  });
+  assert.equal(info.AVAILABLE_PLATFORMS, "iphoneos iphonesimulator");
+  assert.equal(info.SYSROOT, expectedRoot);
+  assert.equal(info.CORRESPONDING_DEVICE_PLATFORM_NAME, "iphoneos");
+  assert.equal(info.CORRESPONDING_DEVICE_PLATFORM_DIR, device);
+  assert.equal(info.CORRESPONDING_DEVICE_SDK_NAME, "iphoneos27.1");
+  assert.equal(info.CORRESPONDING_DEVICE_SDK_DIR, realpathSync(sdkDir));
+});
+
+test("missing optional paired platforms and SDKs never produce invented paths", (t) => {
+  const developerDir = mkdtempSync(join(tmpdir(), "xcl-platform-absence-"));
+  t.after(() => rmSync(developerDir, { recursive: true, force: true }));
+  const simulator = join(developerDir, "Platforms", "iPhoneSimulator.platform");
+  mkdirSync(simulator, { recursive: true });
+  let data = installedPlatformEnvironment({
+    developerDir, platform: "iphonesimulator", sdk: null, hostPlatform: "linux",
+  });
+  assert.equal(data.AVAILABLE_PLATFORMS, "iphonesimulator");
+  assert.equal(data.CORRESPONDING_DEVICE_SDK_DIR, undefined);
+  const device = join(developerDir, "Platforms", "iPhoneOS.platform");
+  mkdirSync(device);
+  data = installedPlatformEnvironment({
+    developerDir, platform: "iphonesimulator", sdk: null, hostPlatform: "linux",
+  });
+  assert.equal(data.CORRESPONDING_DEVICE_PLATFORM_NAME, "iphoneos");
+  assert.equal(data.CORRESPONDING_DEVICE_SDK_NAME, undefined);
 });
