@@ -6,12 +6,6 @@ import { sha256 } from "../util/text.js";
 import { productTypeInfo } from "./productTypes.js";
 import { hostAccountSettings, hostXcodeCacheSettings, hostMacOSVersionSettings } from "./host.js";
 
-/**
- * Xcode's DerivedData directory name includes a stable 28-character hash that
- * Xcode derives internally. The exact algorithm is not public; xcl uses its own
- * deterministic SHA-256-derived suffix. This only affects the default location,
- * never the contents of a build. Use `-derivedDataPath` for exact parity.
- */
 /** Xcode identifies a PBX project by MD5 of its .xcodeproj bundle name. */
 export function xcodeProjectGuid(projectPath) {
   const path = String(projectPath ?? "");
@@ -21,6 +15,12 @@ export function xcodeProjectGuid(projectPath) {
   return createHash("md5").update(bundleName).digest("hex");
 }
 
+/**
+ * Xcode's DerivedData directory name includes a stable 28-character hash that
+ * Xcode derives internally. The exact algorithm is not public; xcl uses its own
+ * deterministic SHA-256-derived suffix. This only affects the default location,
+ * never the contents of a build. Use `-derivedDataPath` for exact parity.
+ */
 export function defaultDerivedDataPath(projectPath) {
   const name = basename(projectPath).replace(/\.xcodeproj$/, "");
   const hash = BigInt(`0x${sha256(projectPath).slice(0, 16)}`)
