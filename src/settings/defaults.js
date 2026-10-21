@@ -600,7 +600,6 @@ export function genericDefaults(context) {
     __IS_NOT_SIMULATOR_simulator: "NO",
     __ORIGINAL_SDK_DEFINED_LLVM_TARGET_TRIPLE_SYS: platform === "iphonesimulator" ||
       platform === "iphoneos" ? "ios" : platform === "macosx" ? "macosx" : platform,
-    __ARCHS__: "$(ARCHS)",
     PLATFORM_NAME: platform,
     SDKROOT: sdk?.path ?? SDKROOT_NAME[platform] ?? platform,
     SDK_NAME: sdk?.name ?? SDKROOT_NAME[platform] ?? platform,
