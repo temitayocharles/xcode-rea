@@ -621,7 +621,8 @@ export function genericDefaults(context) {
     SYSTEM_CORE_SERVICES_DIR: "/System/Library/CoreServices",
     SYSTEM_DEMOS_DIR: "/Applications/Extras",
     SYSTEM_DEVELOPER_DIR: "$(DEVELOPER_DIR)",
-    LEGACY_DEVELOPER_DIR: "$(DEVELOPER_DIR)/../PlugIns/Xcode3Core.ideplugin/Contents/SharedSupport/Developer",
+    LEGACY_DEVELOPER_DIR: developerDir
+      ? join(developerDir, "..", "PlugIns", "Xcode3Core.ideplugin", "Contents", "SharedSupport", "Developer") : "",
     XCODE_APP_SUPPORT_DIR: "$(DEVELOPER_DIR)/Library/Xcode",
     SYSTEM_DEVELOPER_APPS_DIR: "$(DEVELOPER_APPLICATIONS_DIR)",
     SYSTEM_DEVELOPER_BIN_DIR: "$(DEVELOPER_BIN_DIR)",
