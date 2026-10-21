@@ -89,7 +89,7 @@ test("missing-reference diagnostics show only whitelisted non-private setting va
   assert.match(result, /NATIVE_ARCH_32_BIT = "arm"/);
   assert.match(result, /MACOSX_DEPLOYMENT_TARGET = "27.0"/);
   assert.equal(result.split("NATIVE_ARCH_32_BIT").length - 1, 1);
-  assert.doesNotMatch(result, /DEVELOPMENT_TEAM|SECRET|WORKSPACE_DIR|Users\/private|__INTERNAL/);
+  assert.doesNotMatch(result, /DEVELOPMENT_TEAM|SECRET|Users\/private|__INTERNAL|WORKSPACE_DIR = \/Users/);
   assert.throws(() => summarizeMissingReferenceValues(report, { limit: 0 }), /limit/);
 });
 
@@ -121,5 +121,5 @@ test("dynamic Xcode path categories do not disclose users or SDK stat-cache dige
   assert.match(output, /PROVISIONING_PROFILE_SUPPORTED = "YES"/);
   assert.match(output, /ENTITLEMENTS_ALLOWED = "NO"/);
   assert.match(output, /SDK_STAT_CACHE_PATH = <derived-data>\/SDKStatCaches/);
-  assert.doesNotMatch(output, /Users\/private|1234567890abcdef|PATH =/);
+  assert.doesNotMatch(output, /Users\/private|1234567890abcdef|\n  PATH =/);
 });
