@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { summarizeSettingsReport, summarizeValueDifferences, summarizeMissingReferenceValues, redactSettingValue } from "../src/compat/settings-summary.js";
+import { summarizeSettingsReport, summarizeValueDifferences, summarizeMissingReferenceValues, redactSettingValue, redactedXcodeCachePathKind } from "../src/compat/settings-summary.js";
 
 test("settings summary groups all differences while redacting values and paths", () => {
   const report = {
@@ -91,4 +91,35 @@ test("missing-reference diagnostics show only whitelisted non-private setting va
   assert.equal(result.split("NATIVE_ARCH_32_BIT").length - 1, 1);
   assert.doesNotMatch(result, /DEVELOPMENT_TEAM|SECRET|WORKSPACE_DIR|Users\/private|__INTERNAL/);
   assert.throws(() => summarizeMissingReferenceValues(report, { limit: 0 }), /limit/);
+});
+
+test("dynamic Xcode path categories do not disclose users or SDK stat-cache digests", () => {
+  const sdk = "/Users/private/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator27.1-26A1-1234567890abcdef.sdkstatcache";
+  assert.equal(redactedXcodeCachePathKind(sdk),
+    "<derived-data>/SDKStatCaches.noindex/<SDK-specific-digest>.sdkstatcache");
+  assert.equal(redactedXcodeCachePathKind("/Users/private/Library/Developer/Xcode/DerivedData"),
+    "<Xcode DerivedData root>");
+  assert.equal(redactedXcodeCachePathKind("/var/private/C/CompilationCache.noindex"),
+    "<derived-data-or-cache>/CompilationCache.noindex");
+  assert.equal(redactedXcodeCachePathKind("/Users/private/apps/HelloXcode.xcodeproj"),
+    "<project>.xcodeproj");
+  assert.equal(redactedXcodeCachePathKind("/Users/private/apps/App.xcworkspace"),
+    "<workspace>.xcworkspace");
+  assert.equal(redactedXcodeCachePathKind("relative/path"), "<missing-or-nonabsolute>");
+  const report = { gates: [{
+    name: "settings: resolved build settings",
+    differences: [
+      { target: "App", kind: "missing", key: "PROVISIONING_PROFILE_SUPPORTED", xcodebuild: "YES" },
+      { target: "App", kind: "missing", key: "ENTITLEMENTS_ALLOWED", xcodebuild: "NO" },
+      { target: "App", kind: "missing", key: "SDK_STAT_CACHE_PATH", xcodebuild: sdk },
+      { target: "App", kind: "missing", key: "SDK_STAT_CACHE_DIR",
+        xcodebuild: "/Users/private/Library/Developer/Xcode/DerivedData" },
+      { target: "App", kind: "missing", key: "PATH", xcodebuild: "/Users/private/bin:/usr/bin" },
+    ],
+  }] };
+  const output = summarizeMissingReferenceValues(report);
+  assert.match(output, /PROVISIONING_PROFILE_SUPPORTED = "YES"/);
+  assert.match(output, /ENTITLEMENTS_ALLOWED = "NO"/);
+  assert.match(output, /SDK_STAT_CACHE_PATH = <derived-data>\/SDKStatCaches/);
+  assert.doesNotMatch(output, /Users\/private|1234567890abcdef|PATH =/);
 });
