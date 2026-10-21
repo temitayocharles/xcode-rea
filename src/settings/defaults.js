@@ -523,6 +523,11 @@ export function genericDefaults(context) {
     EXTENSIONS_FOLDER_PATH: "$(CONTENTS_FOLDER_PATH)/Extensions",
     SYSTEM_EXTENSIONS_FOLDER_PATH: "$(CONTENTS_FOLDER_PATH)/SystemExtensions",
     SYSTEM_EXTENSIONS_FOLDER_PATH_SHALLOW_BUNDLE_NO: "$(WRAPPER_NAME)/Library/SystemExtensions",
+    // Xcode deep-bundle relative suffixes; these are fixed fragments, not
+    // absolute paths or values copied from the verifier.
+    _WRAPPER_CONTENTS_DIR_SHALLOW_BUNDLE_NO: "/Contents",
+    _WRAPPER_PARENT_PATH_SHALLOW_BUNDLE_NO: "/..",
+    _WRAPPER_RESOURCES_DIR_SHALLOW_BUNDLE_NO: "/Resources",
     SYSTEM_EXTENSIONS_FOLDER_PATH_SHALLOW_BUNDLE_YES: "$(WRAPPER_NAME)/SystemExtensions",
     PACKAGE_TYPE: productInfo.kind === "application"
       ? "com.apple.package-type.wrapper.application"
@@ -551,6 +556,8 @@ export function genericDefaults(context) {
     SRCROOT: projectDir,
     SOURCE_ROOT: projectDir,
     PROJECT_FILE_PATH: projectPath,
+    // -project builds use the .xcodeproj bundle as their implicit workspace.
+    WORKSPACE_DIR: context.workspacePath ?? projectPath,
     PROJECT_NAME: project.name,
     PROJECT: project.name,
     PROJECT_GUID: xcodeProjectGuid(projectPath),
@@ -610,6 +617,12 @@ export function genericDefaults(context) {
     DEVELOPMENT_TEAM: "",
     PROVISIONING_PROFILE_SPECIFIER: "",
     ENTITLEMENTS_REQUIRED: "NO",
+    // Simulator builds never require a provisioning profile, but Apple's
+    // signing system still supports profile-based targets on these SDKs.
+    ...(platform.endsWith("simulator") ? {
+      PROVISIONING_PROFILE_REQUIRED: "NO",
+      PROVISIONING_PROFILE_SUPPORTED: "YES",
+    } : {}),
     LIBRARY_FLAG_PREFIX: "-l",
     GCC_VERSION: "com.apple.compilers.llvm.clang.1_0",
     GCC_VERSION_IDENTIFIER: "com_apple_compilers_llvm_clang_1_0",
