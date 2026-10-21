@@ -107,9 +107,12 @@ test("Xcode 27.1 simulator settings are derived from context, not fixture paths"
   assert.equal(settings.SDK_NAMES, "iphonesimulator18.0");
   assert.equal(settings.EFFECTIVE_SWIFT_VERSION, "5.0");
   assert.equal(settings.DT_TOOLCHAIN_DIR, settings.TOOLCHAIN_DIR);
-  assert.equal(settings.DEVELOPER_FRAMEWORKS_DIR_QUOTED, '"'+settings.DEVELOPER_FRAMEWORKS_DIR+'"');
+  assert.equal(settings.DEVELOPER_FRAMEWORKS_DIR_QUOTED, settings.DEVELOPER_FRAMEWORKS_DIR);
   assert.equal(settings.PKGINFO_FILE_PATH,
-    settings.TARGET_BUILD_DIR + "/HelloXcode.app/PkgInfo");
+    settings.TARGET_TEMP_DIR + "/PkgInfo");
+  assert.equal(settings.PER_VARIANT_OBJECT_FILE_DIR, settings.OBJECT_FILE_DIR_normal);
+  assert.equal(settings.SYSTEM_ADMIN_APPS_DIR, "/Applications/Utilities");
+  assert.equal(settings.SYSTEM_APPS_DIR, "/Applications");
   assert.equal(settings.PRODUCT_SETTINGS_PATH,
     settings.TARGET_BUILD_DIR + "/HelloXcode.app/Info.plist");
   assert.equal(settings.HOST_PLATFORM, "macosx");
