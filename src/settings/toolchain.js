@@ -377,3 +377,46 @@ export function platformDirectory(developerDir, platform) {
   const dir = PLATFORM_DIRS[platform];
   return dir ? join(developerDir, "Platforms", dir) : null;
 }
+
+/**
+ * Context from installed .platform bundles. Do not synthesize corresponding
+ * device SDK values when that platform/SDK is absent: Xcode's resolved output
+ * depends on which optional platform components are actually installed.
+ */
+export function installedPlatformEnvironment({
+  developerDir,
+  platform,
+  sdk = null,
+  hostPlatform = process.platform,
+  runXcrun = execFileSync,
+} = {}) {
+  if (!developerDir || !platform) return {};
+  const platforms = listPlatforms(developerDir);
+  if (platforms.length === 0) return {};
+  const result = {
+    AVAILABLE_PLATFORMS: [...new Set(platforms.map((p) => p.identifier))]
+      .sort().join(" "),
+  };
+  if (sdk?.path) result.SYSROOT = sdk.path;
+
+  const paired = {
+    iphonesimulator: "iphoneos",
+    appletvsimulator: "appletvos",
+    watchsimulator: "watchos",
+    xrsimulator: "xros",
+  }[platform];
+  if (!paired) return result;
+  const devicePlatform = platforms.find((p) => p.identifier === paired);
+  if (!devicePlatform) return result;
+
+  result.CORRESPONDING_DEVICE_PLATFORM_NAME = paired;
+  result.CORRESPONDING_DEVICE_PLATFORM_DIR = devicePlatform.directory;
+  const deviceSdk = resolveSdk({
+    developerDir, platform: paired, requested: paired, hostPlatform, runXcrun,
+  });
+  if (!deviceSdk.missing && deviceSdk.path) {
+    result.CORRESPONDING_DEVICE_SDK_NAME = deviceSdk.name;
+    result.CORRESPONDING_DEVICE_SDK_DIR = deviceSdk.path;
+  }
+  return result;
+}
