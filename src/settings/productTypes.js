@@ -102,6 +102,7 @@ export const PRODUCT_TYPES = Object.freeze({
       TEST_HOST: "",
       WRAPPER_EXTENSION: "xctest",
       ENABLE_TESTING_SEARCH_PATHS: "YES",
+      STRIP_STYLE: "non-global",
     },
   },
   "com.apple.product-type.bundle.ui-testing": {
