@@ -495,6 +495,13 @@ export function resolveBuildSettings(options) {
     const deploymentKey = deploymentTargetSetting(platform);
     finalSettings.DEPLOYMENT_TARGET = finalSettings[deploymentKey] ?? "";
   }
+  // Whether the resolved compiler configuration is unoptimized depends on
+  // effective target settings, not merely the configuration's name.
+  if (finalSettings.IS_UNOPTIMIZED_BUILD === undefined) {
+    finalSettings.IS_UNOPTIMIZED_BUILD =
+      finalSettings.GCC_OPTIMIZATION_LEVEL === "0" &&
+      finalSettings.SWIFT_OPTIMIZATION_LEVEL === "-Onone" ? "YES" : "NO";
+  }
   // The project may declare SWIFT_VERSION=5.0 but Xcode reports the
   // effective language mode as "5". Explicit effective settings still win.
   if (accumulator.EFFECTIVE_SWIFT_VERSION === "$(SWIFT_VERSION)") {
