@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { loadProject } from "../src/xcode/pbxproj.js";
 import { expandSettings, matchConditions, resolveBuildSettings } from "../src/settings/resolver.js";
-import { genericDefaults, defaultDerivedDataPath, sdkVersionSettings, xcodeProjectGuid } from "../src/settings/defaults.js";
+import { genericDefaults, defaultDerivedDataPath, sdkVersionSettings, xcodeProjectGuid, derivedArchitectureFileLists } from "../src/settings/defaults.js";
 import { productTypeInfo } from "../src/settings/productTypes.js";
 import { parsePlist } from "../src/plist/index.js";
 
@@ -42,6 +42,17 @@ test("Xcode PROJECT_GUID is the MD5 of the project bundle name, not PBX rootObje
   assert.equal(xcodeProjectGuid("/tmp/A/HelloXcode.xcodeproj/project.pbxproj"),
     "4a043c181975a0b357f9ef73e27983fc");
   assert.equal(xcodeProjectGuid("/tmp/not-a-project"), "");
+});
+
+test("architecture intermediate file lists derive from build variant and arch set", () => {
+  const list = derivedArchitectureFileLists(["arm64", "x86_64"], "normal");
+  assert.equal(list.LINK_FILE_LIST_normal_arm64,
+    "$(OBJECT_FILE_DIR_normal)/arm64/$(TARGET_NAME).LinkFileList");
+  assert.equal(list.SWIFT_RESPONSE_FILE_PATH_normal_x86_64,
+    "$(OBJECT_FILE_DIR_normal)/x86_64/$(TARGET_NAME).SwiftFileList");
+  assert.equal(list.LM_AUX_CONST_METADATA_LIST_PATH_normal_arm64,
+    "$(OBJECT_FILE_DIR_normal)/arm64/$(TARGET_NAME).SwiftConstValuesFileList");
+  assert.deepEqual(derivedArchitectureFileLists(["arm64;rm -rf /"], "normal"), {});
 });
 
 test("SDK version numbers follow Xcode's major-minor-patch format", () => {
@@ -108,6 +119,23 @@ test("HelloXcode Debug simulator settings", () => {
     "HelloXcode.app/Library/SystemExtensions");
   assert.equal(settings.SYSTEM_EXTENSIONS_FOLDER_PATH_SHALLOW_BUNDLE_YES,
     "HelloXcode.app/SystemExtensions");
+  assert.equal(settings.SUPPORTS_ON_DEMAND_RESOURCES, "YES");
+  assert.equal(settings.LINK_OBJC_RUNTIME, "YES");
+  assert.equal(settings.NATIVE_ARCH_32_BIT, "arm");
+  assert.equal(settings.NATIVE_ARCH_64_BIT, "arm64");
+  assert.equal(settings.LEGACY_DEVELOPER_DIR,
+    settings.DEVELOPER_DIR + "/../PlugIns/Xcode3Core.ideplugin/Contents/SharedSupport/Developer");
+  assert.equal(settings.XCODE_APP_SUPPORT_DIR,
+    settings.DEVELOPER_DIR + "/Library/Xcode");
+  for (const architecture of ["arm64", "x86_64"]) {
+    const dir = settings.OBJECT_FILE_DIR_normal + "/" + architecture;
+    assert.equal(settings["LINK_FILE_LIST_normal_" + architecture],
+      dir + "/HelloXcode.LinkFileList");
+    assert.equal(settings["SWIFT_RESPONSE_FILE_PATH_normal_" + architecture],
+      dir + "/HelloXcode.SwiftFileList");
+    assert.equal(settings["LM_AUX_CONST_METADATA_LIST_PATH_normal_" + architecture],
+      dir + "/HelloXcode.SwiftConstValuesFileList");
+  }
   assert.equal(settings.LOCALIZED_RESOURCES_FOLDER_PATH, "HelloXcode.app/en.lproj");
   assert.equal(settings.DEVELOPMENT_LANGUAGE, "en");
   const fixtureProject = loadProject(fixture("HelloXcode/HelloXcode.xcodeproj"));
