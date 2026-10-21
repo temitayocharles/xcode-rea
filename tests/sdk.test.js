@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { listSdks, resolveSdk, sdkDisplayName } from "../src/settings/toolchain.js";
@@ -28,7 +28,9 @@ test("SDK discovery reads installed SDK settings and normalizes versioned names"
   </dict></plist>`);
   const sdk = resolveSdk({ developerDir: directory, platform: "iphonesimulator",
     requested: "iphonesimulator" });
-  assert.equal(sdk.path, sdkPath);
+  // On macOS, tmpdir() may return /var while realpathSync resolves /private/var.
+  // Compare actual canonical paths, not the textual spelling of a symlink.
+  assert.equal(sdk.path, realpathSync(sdkPath));
   assert.equal(sdk.name, "iphonesimulator27.1");
   assert.equal(sdk.version, "27.1");
   assert.equal(sdk.defaultProperties.IPHONEOS_DEPLOYMENT_TARGET, "17.0");
@@ -49,8 +51,8 @@ test("SDK alias paths resolve to the concrete installed version", (t) => {
     <key>Version</key><string>27.1</string></dict></plist>`);
   const sdk = resolveSdk({ developerDir: directory, platform: "iphonesimulator",
     requested: "iphonesimulator" });
-  assert.equal(sdk.path, canonical);
+  assert.equal(sdk.path, realpathSync(canonical));
   const explicit = resolveSdk({ developerDir: directory, platform: "iphonesimulator",
     requested: alias });
-  assert.equal(explicit.path, canonical);
+  assert.equal(explicit.path, realpathSync(canonical));
 });
