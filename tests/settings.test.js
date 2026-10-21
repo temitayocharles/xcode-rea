@@ -40,6 +40,17 @@ test("HelloXcode Debug simulator settings", () => {
     targetName: "HelloXcode",
   });
   assert.match(settings.BUILT_PRODUCTS_DIR, /DerivedData\/Build\/Products\/Debug-iphonesimulator$/);
+  assert.equal(settings.PROJECT_TEMP_DIR, "/tmp/DerivedData/Build/Intermediates.noindex/HelloXcode.build");
+  assert.equal(settings.DERIVED_FILE_DIR,
+    "/tmp/DerivedData/Build/Intermediates.noindex/HelloXcode.build/Debug-iphonesimulator/HelloXcode.build/DerivedSources");
+  assert.equal(settings.DERIVED_FILES_DIR, settings.DERIVED_FILE_DIR);
+  assert.equal(settings.DERIVED_SOURCES_DIR, settings.DERIVED_FILE_DIR);
+  assert.ok(settings.OBJECT_FILE_DIR_normal.endsWith("/HelloXcode.build/Objects-normal"));
+  assert.ok(settings.FIXED_FILES_DIR.endsWith("/HelloXcode.build/FixedFiles"));
+  assert.equal(settings.DWARF_DSYM_FOLDER_PATH, settings.BUILT_PRODUCTS_DIR);
+  assert.equal(settings.EXECUTABLE_FOLDER_PATH, "HelloXcode.app");
+  assert.equal(settings.LOCALIZED_RESOURCES_FOLDER_PATH, "HelloXcode.app/en.lproj");
+  assert.equal(settings.DEVELOPMENT_LANGUAGE, "en");
   assert.equal(settings.ARCHS, "arm64 x86_64");
   assert.equal(settings.ONLY_ACTIVE_ARCH, "YES");
   assert.equal(settings.SWIFT_OPTIMIZATION_LEVEL, "-Onone");
