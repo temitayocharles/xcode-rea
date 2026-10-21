@@ -152,6 +152,15 @@ const DIAGNOSTIC_REFERENCE_KEYS = new Set([
   // These are Boolean profile capabilities, never identities or profile IDs.
   "PROVISIONING_PROFILE_REQUIRED", "PROVISIONING_PROFILE_SUPPORTED",
   "PROVISIONING_PROFILE_REQUIRED_YES_YES", "ENTITLEMENTS_ALLOWED",
+  // Product-specific linker selectors and their resolved values are needed
+  // to implement the Xcode product spec, but may contain local paths. They
+  // always pass through redactSettingValue before reaching the terminal.
+  "LD_RUNPATH_SEARCH_PATHS_SHALLOW_BUNDLE_NO",
+  "LD_RUNPATH_SEARCH_PATHS_SHALLOW_BUNDLE_YES",
+  "LD_RUNPATH_SEARCH_PATHS_YES",
+  "PRODUCT_SPECIFIC_LDFLAGS",
+  "PRODUCT_SPECIFIC_LDFLAGS_NO_XCTEST_NO",
+  "PRODUCT_TYPE_SWIFT_STDLIB_TOOL_FLAGS_NO_XCTEST_NO",
 ]);
 /**
  * Report only non-sensitive structural categories for dynamic path defaults.
