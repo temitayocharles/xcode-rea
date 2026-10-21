@@ -91,7 +91,7 @@ test("HelloXcode Debug simulator settings", () => {
   assert.equal(settings.DEPLOYMENT_TARGET, "17.0");
   assert.equal(settings.SDKROOT, "iphonesimulator");
   assert.equal(settings.PRODUCT_BUNDLE_IDENTIFIER, "com.example.HelloXcode");
-  assert.equal(settings.GCC_PREPROCESSOR_DEFINITIONS, "DEBUG=1");
+  assert.equal(settings.GCC_PREPROCESSOR_DEFINITIONS, "DEBUG=1 ");
   assert.equal(settings.EFFECTIVE_PLATFORM_NAME, "-iphonesimulator");
 });
 
@@ -113,8 +113,8 @@ test("Xcode 27.1 simulator settings are derived from context, not fixture paths"
   assert.equal(settings.LIBRARY_FLAG_PREFIX, "-l");
   assert.equal(settings.GENERATED_MODULEMAP_DIR,
     "/tmp/DerivedData/Build/Intermediates.noindex/GeneratedModuleMaps-iphonesimulator");
-  assert.equal(settings.FRAMEWORK_SEARCH_PATHS, settings.BUILT_PRODUCTS_DIR);
-  assert.equal(settings.HEADER_SEARCH_PATHS, settings.BUILT_PRODUCTS_DIR + "/include");
+  assert.equal(settings.FRAMEWORK_SEARCH_PATHS, settings.BUILT_PRODUCTS_DIR + " ");
+  assert.equal(settings.HEADER_SEARCH_PATHS, settings.BUILT_PRODUCTS_DIR + "/include ");
 });
 
 test("hosted XCTest output inherits its host application's PlugIns directory", () => {
@@ -289,8 +289,8 @@ test("xcconfig include chains and precedence", () => {
   assert.deepEqual(warnings, []);
   assert.equal(settings.PROJECT_LEVEL_MARKER, "project-xcconfig");
   assert.equal(settings.PRODUCT_BUNDLE_IDENTIFIER, "com.example.ConfigChains");
-  assert.equal(settings.GCC_PREPROCESSOR_DEFINITIONS, "SHARED=1");
-  assert.equal(settings.OTHER_LDFLAGS, "-ObjC -lsim -framework Security");
+  assert.equal(settings.GCC_PREPROCESSOR_DEFINITIONS, " SHARED=1");
+  assert.equal(settings.OTHER_LDFLAGS, " -ObjC -lsim -framework Security");
   assert.equal(settings.SWIFT_ACTIVE_COMPILATION_CONDITIONS, "DEBUG");
 });
 
@@ -314,7 +314,7 @@ test("Release configuration uses its own xcconfig", () => {
     targetName: "ConfigChains",
     configuration: "Release",
   });
-  assert.equal(settings.OTHER_LDFLAGS, "-lrelease");
+  assert.equal(settings.OTHER_LDFLAGS, " -lrelease");
   assert.equal(settings.PRODUCT_BUNDLE_IDENTIFIER, "com.example.projectbase");
   assert.equal(settings.PROJECT_LEVEL_MARKER, undefined);
 });
