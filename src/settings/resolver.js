@@ -412,7 +412,7 @@ export function resolveBuildSettings(options) {
   pushLayer("defaults", defaults);
   // Platform/SDK availability is discovered from actual installed components.
   // It augments the computed context without overriding project/target input.
-  const installed = installedPlatformEnvironment({ developerDir, platform, sdk });
+  const installed = installedPlatformEnvironment({ developerDir, platform, sdk, xcodeVersion });
   if (Object.keys(installed).length > 0) {
     pushLayer("installed-platform-environment", installed);
   }
