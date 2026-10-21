@@ -109,23 +109,20 @@ Not automated, because it depends on what the app does:
 
 ## What these gates do not prove
 
-- On macOS / Xcode 27.1, the HelloXcode fixture **passed 126
+- On macOS / Xcode 27.1, the HelloXcode fixture **passed 128
   regression tests**, compiled and packaged the real simulator app, passed
-  code-signing/arm64 verification, and matched project structure. The last
-  completed hardware settings gate still failed: **zero value mismatches and
-  41 missing settings** across two targets (21 app, 20 XCTest). This is
-  authentic Mac evidence, not a post-fix estimate.
-- Subsequently added WORKSPACE_DIR from the selected project or explicit
-  workspace, stable deep-bundle _WRAPPER suffixes, and simulator-only
-  PROVISIONING_PROFILE_REQUIRED/SUPPORTED with source-grounded defaults.
-  The certifier now shows only Boolean provisioning capabilities and structural
-  categories of SDK-stat/compilation cache paths, never usernames, digests,
-  process PATH or signing identities. **128/128 Node regressions pass in an
-  isolated checkout**. The changes have NOT yet been measured by macOS.
-  Nonportable provisioning conditionals, runtime-generated cache paths,
-  Swift protocol metadata and Xcode serialization internals remain unresolved
-  rather than guessed or excluded. Strict settings parity stays the release
-  blocker.
+  code-signing/arm64 verification, and matched project structure. The latest
+  real hardware settings gate still failed: **zero value mismatches and
+  29 missing settings** across two targets (15 app, 14 XCTest).
+- Two subsequent Xcode-27.1-only hosted XCTest simulator-signing conditional
+  values (ENTITLEMENTS_ALLOWED and PROVISIONING_PROFILE_REQUIRED_YES_YES)
+  now have dedicated regression assertions, but their effect has NOT yet
+  been measured on macOS. The current **128/128 Node regressions pass** in
+  isolated validation. The remaining missing entries include SDK stat-cache
+  and compilation-cache paths, Xcode-injected PATH, Swift protocol metadata,
+  conditional runpaths, and Xcode-private internal state. Do not synthesize
+  these without authoritative runtime evidence, or suppress them to bypass
+  the strict release gate. Complete raw evidence stays local.
 - Missing settings now include their Xcode reference values in the detailed
   JSON report. The complete artifact can contain local paths and identities;
   review it before sharing or committing.
