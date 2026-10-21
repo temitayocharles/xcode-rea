@@ -66,6 +66,17 @@ test("HelloXcode plan contains compile, resources, plist and signing steps", () 
   assert.equal(plan.target.productPath, "/tmp/DerivedData/Build/Products/Debug-iphonesimulator/HelloXcode.app");
 });
 
+test("hosted XCTest plan builds and signs inside the host app PlugIns directory", () => {
+  const { plan, settings } = makePlan({ targetName: "HelloXcodeTests" });
+  const expected = settings.BUILT_PRODUCTS_DIR + "/HelloXcode.app/PlugIns/HelloXcodeTests.xctest";
+  assert.equal(plan.target.productPath, expected);
+  const sources = plan.steps.flatMap((step) => step.outputs ?? []);
+  assert.ok(sources.includes(expected));
+  assert.ok(sources.some((path) => path.startsWith(expected + "/")));
+  const sign = plan.steps.find((step) => step.kind === "sign");
+  assert.ok(sign && sign.command.args.includes(expected));
+});
+
 test("all asset catalogs compile together with global icon and accent settings", () => {
   const { plan } = makePlan();
   const calls = plan.steps.filter((step) => step.command.args[0] === "actool");
