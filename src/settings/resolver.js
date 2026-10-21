@@ -483,6 +483,19 @@ export function resolveBuildSettings(options) {
 
   const { settings, missing } = expandSettings(accumulator);
 
+  // Some Xcode product signing conditionals are synthesized after merging
+  // installed SDK defaults and target settings. Preserve explicit values,
+  // and emit only policies measured for this exact Xcode/SDK/product scope.
+  if (target?.productType === "com.apple.product-type.bundle.unit-test" &&
+      platform === "iphonesimulator" && /^27\\.1(?:\\.|$)/.test(String(xcodeVersion ?? ""))) {
+    if (!Object.hasOwn(settings, "ENTITLEMENTS_ALLOWED")) {
+      settings.ENTITLEMENTS_ALLOWED = "NO";
+    }
+    if (!Object.hasOwn(settings, "PROVISIONING_PROFILE_REQUIRED_YES_YES")) {
+      settings.PROVISIONING_PROFILE_REQUIRED_YES_YES = "YES";
+    }
+  }
+
   // Settings that must exist even when nothing referenced them.
   const finalSettings = { ...settings };
   if (!finalSettings.PRODUCT_MODULE_NAME) {
