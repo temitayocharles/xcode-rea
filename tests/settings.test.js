@@ -102,6 +102,12 @@ test("HelloXcode Debug simulator settings", () => {
     settings.DEVELOPER_DIR + "/Applications/Performance Tools");
   assert.equal(settings.SYSTEM_DEVELOPER_USR_DIR, settings.DEVELOPER_USR_DIR);
   assert.equal(settings.SYSTEM_DOCUMENTATION_DIR, "/Library/Documentation");
+  assert.equal(settings.USER_APPS_DIR, settings.HOME + "/Applications");
+  assert.equal(settings.USER_LIBRARY_DIR, settings.HOME + "/Library");
+  assert.equal(settings.SYSTEM_EXTENSIONS_FOLDER_PATH_SHALLOW_BUNDLE_NO,
+    "HelloXcode.app/Library/SystemExtensions");
+  assert.equal(settings.SYSTEM_EXTENSIONS_FOLDER_PATH_SHALLOW_BUNDLE_YES,
+    "HelloXcode.app/SystemExtensions");
   assert.equal(settings.LOCALIZED_RESOURCES_FOLDER_PATH, "HelloXcode.app/en.lproj");
   assert.equal(settings.DEVELOPMENT_LANGUAGE, "en");
   const fixtureProject = loadProject(fixture("HelloXcode/HelloXcode.xcodeproj"));
@@ -218,7 +224,7 @@ test("hosted XCTest output inherits its host application's PlugIns directory", (
     "  " + settings.PLATFORM_DEVELOPER_USR_DIR + "/lib");
   const frameworks = settings.PLATFORM_DEVELOPER_LIBRARY_DIR + "/Frameworks";
   assert.equal(settings.SYSTEM_FRAMEWORK_SEARCH_PATHS,
-    "  " + frameworks + " " + frameworks);
+    "  " + frameworks + " " + settings.SDK_DIR + "/Developer/Library/Frameworks");
   assert.equal(settings.PRODUCT_TYPE_SWIFT_STDLIB_TOOL_FLAGS,
     "--scan-executable " + settings.PLATFORM_DEVELOPER_USR_DIR + "/lib/libXCTestSwiftSupport.dylib");
   assert.equal(settings.OTHER_SWIFT_FLAGS,
