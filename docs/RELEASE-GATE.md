@@ -114,12 +114,13 @@ Not automated, because it depends on what the app does:
   code-signing/arm64 verification, and matched project structure. The latest
   real hardware settings gate still failed: **zero value mismatches and
   29 missing settings** across two targets (15 app, 14 XCTest).
-- Two subsequent Xcode-27.1-only hosted XCTest simulator-signing conditional
-  values (ENTITLEMENTS_ALLOWED and PROVISIONING_PROFILE_REQUIRED_YES_YES)
-  now have dedicated regression assertions, and a scoped post-resolution
-  fallback was added for unresolved XCTest flags. Missing-value diagnostics
-  now identify the affected target. These changes have NOT yet been measured
-  on macOS; the last hardware checkpoint remains 0/29. The current **129/129 Node regressions pass** in
+- The newest Mac report identifies ENTITLEMENTS_ALLOWED and
+  PROVISIONING_PROFILE_REQUIRED_YES_YES as missing from the HelloXcode
+  APPLICATION, not the hosted XCTest target. Their Xcode-27.1 simulator
+  defaults and post-resolution fallback are now correctly scoped to the app;
+  XCTest remains unaffected and higher-priority overrides retain precedence.
+  This correction passes regressions but has NOT yet been measured on macOS;
+  the last hardware checkpoint remains 0/29. The current **129/129 Node regressions pass** in
   isolated validation. The remaining missing entries include SDK stat-cache
   and compilation-cache paths, Xcode-injected PATH, Swift protocol metadata,
   conditional runpaths, and Xcode-private internal state. Do not synthesize
