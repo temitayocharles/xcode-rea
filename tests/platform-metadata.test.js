@@ -65,6 +65,8 @@ test("installed platform metadata supplies defaults and build version without ov
       defaultProperties: {},
     },
     derivedDataPath: "/tmp/xcl-platform-metadata-output", developerDir,
+    // Explicit -sdk wins over the fixture project's symbolic SDKROOT=iphoneos.
+    overrides: { SDKROOT: "/virtual/SDKs/iPhoneSimulator27.1.sdk" },
   });
   assert.equal(result.settings.PLATFORM_USES_DSYMS, "YES");
   assert.equal(result.settings.PLATFORM_PRODUCT_BUILD_VERSION, "27A9275");
