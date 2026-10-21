@@ -228,10 +228,6 @@ export function platformDefaults(context) {
   const [displayName, familyName, preferredArch] = PLATFORM_LABELS[platform] ?? [platform, platform, null];
 
   const defaults = {
-    // The installed platform provides additional conditional values that a
-    // generic toolchain cannot predict. SDK/active-context values below are
-    // authoritative over these baseline declarations.
-    ...installedPlatformProperties(developerDir, platform),
     SDKROOT: sdk?.path ?? sdkRoot,
     PLATFORM_NAME: platform,
     PLATFORM_DISPLAY_NAME: displayName,
