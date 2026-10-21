@@ -485,6 +485,13 @@ export function resolveBuildSettings(options) {
     const deploymentKey = deploymentTargetSetting(platform);
     finalSettings.DEPLOYMENT_TARGET = finalSettings[deploymentKey] ?? "";
   }
+  // The project may declare SWIFT_VERSION=5.0 but Xcode reports the
+  // effective language mode as "5". Explicit effective settings still win.
+  if (accumulator.EFFECTIVE_SWIFT_VERSION === "$(SWIFT_VERSION)") {
+    const version = String(finalSettings.SWIFT_VERSION ?? "");
+    finalSettings.EFFECTIVE_SWIFT_VERSION = /^\d+\.0$/.test(version)
+      ? version.slice(0, -2) : version;
+  }
 
   return {
     settings: finalSettings,
