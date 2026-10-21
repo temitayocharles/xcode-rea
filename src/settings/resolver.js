@@ -242,11 +242,14 @@ function normalizeValue(value) {
       pendingSpace = true;
       continue;
     }
-    if (pendingSpace && output.length > 0) output += " ";
+    if (pendingSpace) output += " ";
     pendingSpace = false;
     output += char;
   }
-  return output.trim();
+  // xcodebuild preserves the space left by a trailing or leading
+  // $(inherited) expansion. Do not trim it: DEBUG=1 / DEBUG=1<space>
+  // are distinct output values and are both observable in -showBuildSettings.
+  return pendingSpace ? output + " " : output;
 }
 
 export function expandSettings(rawSettings, options = {}) {
