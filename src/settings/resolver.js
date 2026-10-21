@@ -2,6 +2,7 @@ import { basename, dirname, extname, join, normalize, relative } from "node:path
 import { readXcconfig, parseConditionalKey } from "../xcode/xcconfig.js";
 import { matchesGlob } from "../util/text.js";
 import { genericDefaults, deploymentTargetSetting, installedPlatformProperties } from "./defaults.js";
+import { installedPlatformEnvironment } from "./toolchain.js";
 
 const INHERITED_PATTERN = /\$\(inherited\)|\$\{inherited\}/g;
 
@@ -409,6 +410,12 @@ export function resolveBuildSettings(options) {
     pushLayer("xcode-platform-defaults", platformProperties);
   }
   pushLayer("defaults", defaults);
+  // Platform/SDK availability is discovered from actual installed components.
+  // It augments the computed context without overriding project/target input.
+  const installed = installedPlatformEnvironment({ developerDir, platform, sdk });
+  if (Object.keys(installed).length > 0) {
+    pushLayer("installed-platform-environment", installed);
+  }
 
   const projectConfig = findConfiguration(project, project.projectConfigurations(), configuration);
   if (projectConfig) {
