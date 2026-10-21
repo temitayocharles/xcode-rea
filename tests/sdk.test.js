@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { listSdks, resolveSdk, sdkDisplayName } from "../src/settings/toolchain.js";
+import { listSdks, resolveSdk, sdkDisplayName, sdkBuildVersion } from "../src/settings/toolchain.js";
 
 test("SDK canonical names with embedded version are not double-suffixed", () => {
   assert.equal(sdkDisplayName("iphonesimulator27.1", "27.1"), "iphonesimulator27.1");
@@ -98,4 +98,22 @@ test("versionless SDK with different identity is never remapped to another SDK",
   assert.equal(resolveSdk({
     developerDir: directory, platform: "iphonesimulator", requested: versionless,
   }).path, realpathSync(versionless));
+});
+
+test("SDK build version is read from the installed system image, not invented", (t) => {
+  const developerDir = mkdtempSync(join(tmpdir(), "xcl-sdk-build-version-"));
+  t.after(() => rmSync(developerDir, { recursive: true, force: true }));
+  const sdk = join(developerDir, "Platforms", "iPhoneSimulator.platform", "Developer", "SDKs", "iPhoneSimulator27.1.sdk");
+  const systemDir = join(sdk, "System", "Library", "CoreServices");
+  mkdirSync(systemDir, { recursive: true });
+  writeFileSync(join(sdk, "SDKSettings.plist"), `<?xml version="1.0"?>
+  <plist version="1.0"><dict><key>CanonicalName</key><string>iphonesimulator27.1</string>
+  <key>Version</key><string>27.1</string></dict></plist>`);
+  writeFileSync(join(systemDir, "SystemVersion.plist"), `<?xml version="1.0"?>
+  <plist version="1.0"><dict><key>ProductBuildVersion</key>
+  <string>24B123</string></dict></plist>`);
+  const resolved = resolveSdk({ developerDir, platform: "iphonesimulator", requested: "iphonesimulator" });
+  assert.equal(resolved.productBuildVersion, "24B123");
+  assert.equal(sdkBuildVersion(sdk, { ProductBuildVersion: "override-product" }), "override-product");
+  assert.equal(sdkBuildVersion(sdk, null), "24B123");
 });
