@@ -216,10 +216,32 @@ export function sdkDisplayName(canonicalName, version) {
 }
 
 /**
+ * Ask Apple's installed xcrun which SDK directory it selects. Unlike
+ * realpathSync, xcrun preserves the SDK directory spelling used by the active
+ * Apple toolchain; both may exist as valid physical or symlinked .sdk paths.
+ * This must not override an explicitly requested absolute SDK directory.
+ */
+export function xcrunSelectedSdkPath(sdkName, {
+  hostPlatform = process.platform,
+  run = execFileSync,
+} = {}) {
+  if (hostPlatform !== "darwin" || !sdkName || /[\\/]/.test(sdkName)) return null;
+  try {
+    const path = String(run("xcrun", ["--sdk", sdkName, "--show-sdk-path"], {
+      encoding: "utf8", timeout: 5000,
+      stdio: ["ignore", "pipe", "ignore"],
+    })).trim();
+    return path.endsWith(".sdk") && existsSync(path) ? path : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Resolve an SDK for a platform. `requested` may be a name (iphonesimulator),
  * a versioned name (iphonesimulator18.0), or an absolute path to an .sdk.
  */
-export function resolveSdk({ developerDir, platform, requested = null, sdkVersion = null }) {
+export function resolveSdk({ developerDir, platform, requested = null, sdkVersion = null, hostPlatform = process.platform, runXcrun = execFileSync }) {
   if (requested && requested.endsWith(".sdk") && existsSync(requested)) {
     const actualPath = realpathSync(requested);
     const settings = readSdkSettings(actualPath);
@@ -235,6 +257,36 @@ export function resolveSdk({ developerDir, platform, requested = null, sdkVersio
       productBuildVersion: sdkBuildVersion(sdkPath, settings),
       settings,
     };
+  }
+
+  // The installed Xcode/CLT selection is the authority for active symbolic
+  // SDK names. Use this spelling for build settings, but keep filesystem
+  // enumeration as a fallback for Linux, offline fixtures and unsupported SDKs.
+  // A requested OS version without an explicit SDK should still be resolved by
+  // normal version matching below.
+  if (!sdkVersion || requested) {
+    const selected = xcrunSelectedSdkPath(requested || platform, {
+      hostPlatform, run: runXcrun,
+    });
+    if (selected) {
+      const settings = readSdkSettings(selected);
+      const name = settings?.CanonicalName ?? basename(selected, ".sdk");
+      const version = settings?.Version ?? null;
+      // Validate that the returned SDK is for the requested platform. If it
+      // points elsewhere, fall back to local SDK metadata discovery.
+      if (!requested || requested === name || name.startsWith(platform)) {
+        return {
+          path: selected,
+          root: name,
+          name: sdkDisplayName(name, version),
+          version,
+          canonicalName: name,
+          defaultProperties: settings?.DefaultProperties ?? {},
+          productBuildVersion: sdkBuildVersion(selected, settings),
+          settings,
+        };
+      }
+    }
   }
 
   const roots = sdkSearchRoots(developerDir, platform);
