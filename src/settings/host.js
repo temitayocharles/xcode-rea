@@ -115,7 +115,8 @@ export function hostMacOSVersionSettings({
   const result = {
     MAC_OS_X_VERSION_ACTUAL: String(base + patch),
     MAC_OS_X_VERSION_MAJOR: String(base),
-    MAC_OS_X_VERSION_MINOR: String(minor * 100 + patch).padStart(4, "0"),
+    // Xcode exposes the numeric minor/patch field, not a padded string.
+    MAC_OS_X_VERSION_MINOR: String(minor * 100 + patch),
   };
   try {
     const build = String(run("sw_vers", ["-buildVersion"], {
