@@ -124,7 +124,8 @@ test("HelloXcode Debug simulator settings", () => {
   assert.equal(settings.NATIVE_ARCH_32_BIT, "arm");
   assert.equal(settings.NATIVE_ARCH_64_BIT, "arm64");
   assert.equal(settings.LEGACY_DEVELOPER_DIR,
-    settings.DEVELOPER_DIR + "/../PlugIns/Xcode3Core.ideplugin/Contents/SharedSupport/Developer");
+    join(settings.DEVELOPER_DIR, "..", "PlugIns",
+      "Xcode3Core.ideplugin", "Contents", "SharedSupport", "Developer"));
   assert.equal(settings.XCODE_APP_SUPPORT_DIR,
     settings.DEVELOPER_DIR + "/Library/Xcode");
   for (const architecture of ["arm64", "x86_64"]) {
