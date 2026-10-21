@@ -324,14 +324,6 @@ test("hosted XCTest output inherits its host application's PlugIns directory", (
     " @loader_path/Frameworks @executable_path/Frameworks");
   assert.equal(settings.INSTALL_DIR, "/tmp/HelloXcode.dst");
   assert.equal(settings.STRIP_STYLE, "non-global");
-  // Xcode 27.1 observed XCTest simulator signing conditions.
-  const observed = settingsFor({
-    projectPath: fixture("HelloXcode/HelloXcode.xcodeproj"),
-    targetName: "HelloXcodeTests",
-    xcodeVersion: "27.1",
-  }).settings;
-  assert.equal(observed.ENTITLEMENTS_ALLOWED, "NO");
-  assert.equal(observed.PROVISIONING_PROFILE_REQUIRED_YES_YES, "YES");
   assert.equal(settings.LIBRARY_SEARCH_PATHS,
     settings.BUILT_PRODUCTS_DIR + "   " + settings.PLATFORM_DEVELOPER_USR_DIR + "/lib");
   assert.equal(settings.SWIFT_SYSTEM_INCLUDE_PATHS,
@@ -345,24 +337,21 @@ test("hosted XCTest output inherits its host application's PlugIns directory", (
     " -plugin-path " + settings.TOOLCHAIN_DIR + "/usr/lib/swift/host/plugins/testing");
 });
 
-test("measured XCTest signing conditionals are resolved after SDK defaults", () => {
+test("Xcode 27.1 simulator signing conditionals belong to app, not XCTest", () => {
   const projectPath = fixture("HelloXcode/HelloXcode.xcodeproj");
-  const options = {
-    projectPath, targetName: "HelloXcodeTests", xcodeVersion: "27.1",
-    sdk: {
-      path: "/SDK/iphonesimulator27.1.sdk", name: "iphonesimulator27.1",
-      version: "27.1", root: "iphonesimulator",
-      defaultProperties: {
-        ENTITLEMENTS_ALLOWED: "NO",
-        PROVISIONING_PROFILE_REQUIRED_YES_YES: "YES",
-      },
-    },
+  const base = {
+    projectPath, xcodeVersion: "27.1",
+    sdk: { path: "/SDK/iphonesimulator27.1.sdk",
+      name: "iphonesimulator27.1", version: "27.1",
+      root: "iphonesimulator", defaultProperties: {} },
   };
-  const { settings } = settingsFor(options);
-  assert.equal(settings.ENTITLEMENTS_ALLOWED, "NO");
-  assert.equal(settings.PROVISIONING_PROFILE_REQUIRED_YES_YES, "YES");
-  const overridden = settingsFor({
-    ...options,
+  const app = settingsFor({ ...base, targetName: "HelloXcode" }).settings;
+  assert.equal(app.ENTITLEMENTS_ALLOWED, "NO");
+  assert.equal(app.PROVISIONING_PROFILE_REQUIRED_YES_YES, "YES");
+  const tests = settingsFor({ ...base, targetName: "HelloXcodeTests" }).settings;
+  assert.equal(tests.ENTITLEMENTS_ALLOWED, undefined);
+  assert.equal(tests.PROVISIONING_PROFILE_REQUIRED_YES_YES, undefined);
+  const overridden = settingsFor({ ...base, targetName: "HelloXcode",
     overrides: {
       ENTITLEMENTS_ALLOWED: "CUSTOM",
       PROVISIONING_PROFILE_REQUIRED_YES_YES: "CUSTOM",
@@ -370,15 +359,9 @@ test("measured XCTest signing conditionals are resolved after SDK defaults", () 
   }).settings;
   assert.equal(overridden.ENTITLEMENTS_ALLOWED, "CUSTOM");
   assert.equal(overridden.PROVISIONING_PROFILE_REQUIRED_YES_YES, "CUSTOM");
-  const noSdkSigningFlags = {
-    ...options.sdk,
-    defaultProperties: {},
-  };
-  const app = settingsFor({ ...options, sdk: noSdkSigningFlags,
-    targetName: "HelloXcode" }).settings;
-  assert.equal(app.PROVISIONING_PROFILE_REQUIRED_YES_YES, undefined);
-  const older = settingsFor({ ...options, sdk: noSdkSigningFlags,
+  const older = settingsFor({ ...base, targetName: "HelloXcode",
     xcodeVersion: "26.4" }).settings;
+  assert.equal(older.ENTITLEMENTS_ALLOWED, undefined);
   assert.equal(older.PROVISIONING_PROFILE_REQUIRED_YES_YES, undefined);
 });
 
