@@ -177,6 +177,15 @@ export function redactedXcodeCachePathKind(value) {
   if (/\/DerivedData\/?$/.test(value)) {
     return "<Xcode DerivedData root>";
   }
+  if (/\/SDKStatCaches\.noindex\/?$/.test(value)) {
+    return "<cache-root>/SDKStatCaches.noindex";
+  }
+  if (/\/SDKStatCaches\.noindex\/[^/]+$/.test(value)) {
+    return "<cache-root>/SDKStatCaches.noindex/<opaque-entry>";
+  }
+  if (/\/Build\/Intermediates\.noindex\/[^/]+\.build\/[^/]+\/[^/]+\.build\/DerivedSources\/[^/]+$/.test(value)) {
+    return "<derived-data>/Build/Intermediates.noindex/<project>/<configuration>/<target>/DerivedSources/<generated-entry>";
+  }
   if (/\.xcodeproj\/?$/.test(value)) return "<project>.xcodeproj";
   if (/\.xcworkspace\/?$/.test(value)) return "<workspace>.xcworkspace";
   return "<other absolute filesystem path>";
