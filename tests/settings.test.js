@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { loadProject } from "../src/xcode/pbxproj.js";
 import { expandSettings, matchConditions, resolveBuildSettings } from "../src/settings/resolver.js";
-import { genericDefaults, defaultDerivedDataPath, sdkVersionSettings } from "../src/settings/defaults.js";
+import { genericDefaults, defaultDerivedDataPath, sdkVersionSettings, xcodeProjectGuid } from "../src/settings/defaults.js";
 import { productTypeInfo } from "../src/settings/productTypes.js";
 import { parsePlist } from "../src/plist/index.js";
 
@@ -33,6 +33,16 @@ function settingsFor({ projectPath, targetName, configuration = "Debug", platfor
     overrides: { SDKROOT: platform, ...overrides },
   });
 }
+
+test("Xcode PROJECT_GUID is the MD5 of the project bundle name, not PBX rootObject", () => {
+  assert.equal(xcodeProjectGuid("/tmp/A/Zotero.xcodeproj"),
+    "58a3ba8f89924aadaccf2ef83a272a88");
+  assert.equal(xcodeProjectGuid("/tmp/B/places.xcodeproj"),
+    "14a86506a56eb18b25d41e9dce5b262c");
+  assert.equal(xcodeProjectGuid("/tmp/A/HelloXcode.xcodeproj/project.pbxproj"),
+    "4a043c181975a0b357f9ef73e27983fc");
+  assert.equal(xcodeProjectGuid("/tmp/not-a-project"), "");
+});
 
 test("SDK version numbers follow Xcode's major-minor-patch format", () => {
   assert.deepEqual(sdkVersionSettings("27.1"), {
@@ -77,7 +87,7 @@ test("HelloXcode Debug simulator settings", () => {
   assert.equal(settings.DEVELOPMENT_LANGUAGE, "en");
   const fixtureProject = loadProject(fixture("HelloXcode/HelloXcode.xcodeproj"));
   assert.equal(settings.PROJECT, fixtureProject.name);
-  assert.equal(settings.PROJECT_GUID, fixtureProject.rootObject);
+  assert.equal(settings.PROJECT_GUID, "4a043c181975a0b357f9ef73e27983fc");
   assert.equal(settings.ARCHS, "arm64 x86_64");
   assert.equal(settings.ONLY_ACTIVE_ARCH, "YES");
   assert.equal(settings.SWIFT_OPTIMIZATION_LEVEL, "-Onone");
