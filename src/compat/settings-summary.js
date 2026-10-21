@@ -63,3 +63,53 @@ export function summarizeSettingsReport(report, { limit = 12 } = {}) {
   }
   return lines.join("\n");
 }
+
+/**
+ * Diagnostic values are not a shareable substitute for the original report.
+ * Print only structure: leave ordinary compiler flags legible but mask
+ * absolute filesystem tokens and long opaque account/identity identifiers.
+ * Detailed unredacted evidence stays in the local JSON report.
+ */
+export function redactSettingValue(value) {
+  if (value === undefined || value === null) return "<absent>";
+  const source = String(value);
+  if (source === "") return "<empty>";
+  // Redact opaque identifiers while retaining simple compiler flags.
+  const opaqueRedacted = source.replace(/\b[A-Fa-f0-9]{24,}\b/g, "<opaque-id>");
+  const pathsRedacted = opaqueRedacted.replace(
+    /(^|[\s="'])(\/(?:[^\s"'=]+\/?)+)/g,
+    (_match, prefix, path) => {
+      const components = path.split("/").filter(Boolean);
+      return prefix + "<absolute:" + components.slice(-2).join("/") + ">";
+    },
+  );
+  return pathsRedacted.length <= 220
+    ? JSON.stringify(pathsRedacted)
+    : JSON.stringify(pathsRedacted.slice(0, 217) + "...");
+}
+
+export function summarizeValueDifferences(report, { limit = 45 } = {}) {
+  if (!Number.isInteger(limit) || limit < 1 || limit > 200) {
+    throw new RangeError("limit must be an integer between 1 and 200");
+  }
+  const gate = report?.gates?.find((item) => item.name === "settings: resolved build settings");
+  if (!Array.isArray(gate?.differences)) {
+    throw new Error("report lacks structured differences");
+  }
+  const rows = gate.differences.filter((entry) => entry.kind === "different");
+  const output = [
+    "VALUE COMPARISON (absolute path prefixes and opaque identifiers masked)",
+    "Unredacted values remain only in the local JSON report. Review before sharing.",
+  ];
+  for (const row of rows.slice(0, limit)) {
+    if (!/^[A-Za-z0-9_]+$/.test(row.key ?? "") ||
+      !/^[A-Za-z0-9_]+$/.test(row.target ?? "")) {
+      throw new Error("invalid difference record");
+    }
+    output.push(`  ${row.target}.${row.key}`);
+    output.push(`    xcl:      ${redactSettingValue(row.xcl)}`);
+    output.push(`    Xcode:    ${redactSettingValue(row.xcodebuild)}`);
+  }
+  if (rows.length > limit) output.push(`  ... ${rows.length - limit} additional differing occurrences in JSON`);
+  return output.join("\n");
+}
