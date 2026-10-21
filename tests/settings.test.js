@@ -11,7 +11,7 @@ import { parsePlist } from "../src/plist/index.js";
 const here = dirname(fileURLToPath(import.meta.url));
 const fixture = (name) => join(here, "fixtures", name);
 
-function settingsFor({ projectPath, targetName, configuration = "Debug", platform = "iphonesimulator", arch = "arm64", overrides = {}, sdk }) {
+function settingsFor({ projectPath, targetName, configuration = "Debug", platform = "iphonesimulator", arch = "arm64", overrides = {}, sdk, xcodeVersion = null }) {
   const project = loadProject(projectPath);
   const target = targetName ? project.targetByName(targetName) : null;
   return resolveBuildSettings({
@@ -30,6 +30,7 @@ function settingsFor({ projectPath, targetName, configuration = "Debug", platfor
     hostArch: "arm64",
     derivedDataPath: "/tmp/DerivedData",
     developerDir: "/Applications/Xcode.app/Contents/Developer",
+    xcodeVersion,
     overrides: { SDKROOT: platform, ...overrides },
   });
 }
