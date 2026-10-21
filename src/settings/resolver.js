@@ -487,7 +487,7 @@ export function resolveBuildSettings(options) {
   // installed SDK defaults and target settings. Preserve explicit values,
   // and emit only policies measured for this exact Xcode/SDK/product scope.
   if (target?.productType === "com.apple.product-type.bundle.unit-test" &&
-      platform === "iphonesimulator" && /^27\\.1(?:\\.|$)/.test(String(xcodeVersion ?? ""))) {
+      platform === "iphonesimulator" && /^27\.1(?:\.|$)/.test(String(xcodeVersion ?? ""))) {
     if (!Object.hasOwn(settings, "ENTITLEMENTS_ALLOWED")) {
       settings.ENTITLEMENTS_ALLOWED = "NO";
     }
