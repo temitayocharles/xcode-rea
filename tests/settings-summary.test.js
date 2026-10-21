@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { summarizeSettingsReport, summarizeValueDifferences, redactSettingValue } from "../src/compat/settings-summary.js";
+import { summarizeSettingsReport, summarizeValueDifferences, summarizeMissingReferenceValues, redactSettingValue } from "../src/compat/settings-summary.js";
 
 test("settings summary groups all differences while redacting values and paths", () => {
   const report = {
@@ -61,4 +61,34 @@ test("value diagnosis keeps comparison shape while masking absolute paths and op
   assert.doesNotMatch(output, /123456789012345678901234/);
   assert.ok(redactSettingValue("") === "<empty>");
   assert.throws(() => summarizeValueDifferences(report, { limit: 0 }), /limit must/);
+});
+
+test("redacted Xcode framework paths identify SDK versus platform without private roots", () => {
+  const root = "/Users/private/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform";
+  const platform = redactSettingValue(root + "/Developer/Library/Frameworks");
+  const sdk = redactSettingValue(root + "/Developer/SDKs/iPhoneSimulator27.1.sdk/Developer/Library/Frameworks");
+  assert.match(platform, /relative:Developer\/Library\/Frameworks/);
+  assert.match(sdk, /relative:Developer\/SDKs\/iPhoneSimulator27.1.sdk\/Developer\/Library\/Frameworks/);
+  assert.notEqual(platform, sdk);
+  assert.doesNotMatch(sdk, /Users\/private/);
+});
+
+test("missing-reference diagnostics show only whitelisted non-private setting values", () => {
+  const report = { gates: [{
+    name: "settings: resolved build settings",
+    differences: [
+      { target: "App", key: "NATIVE_ARCH_32_BIT", kind: "missing", xcodebuild: "arm" },
+      { target: "Tests", key: "NATIVE_ARCH_32_BIT", kind: "missing", xcodebuild: "arm" },
+      { target: "App", key: "MACOSX_DEPLOYMENT_TARGET", kind: "missing", xcodebuild: "27.0" },
+      { target: "App", key: "DEVELOPMENT_TEAM", kind: "missing", xcodebuild: "SECRET" },
+      { target: "App", key: "WORKSPACE_DIR", kind: "missing", xcodebuild: "/Users/private/projects" },
+      { target: "App", key: "__INTERNAL", kind: "missing", xcodebuild: "sensitive" },
+    ],
+  }] };
+  const result = summarizeMissingReferenceValues(report);
+  assert.match(result, /NATIVE_ARCH_32_BIT = "arm"/);
+  assert.match(result, /MACOSX_DEPLOYMENT_TARGET = "27.0"/);
+  assert.equal(result.split("NATIVE_ARCH_32_BIT").length - 1, 1);
+  assert.doesNotMatch(result, /DEVELOPMENT_TEAM|SECRET|WORKSPACE_DIR|Users\/private|__INTERNAL/);
+  assert.throws(() => summarizeMissingReferenceValues(report, { limit: 0 }), /limit/);
 });
