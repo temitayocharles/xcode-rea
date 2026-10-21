@@ -174,6 +174,19 @@ function readSdkSettings(path) {
   }
 }
 
+/** SDK system image build number, when supplied by Apple's SDK installation. */
+export function sdkBuildVersion(sdkPath, settings = readSdkSettings(sdkPath)) {
+  if (typeof settings?.ProductBuildVersion === "string" && settings.ProductBuildVersion) {
+    return settings.ProductBuildVersion;
+  }
+  try {
+    const system = readPlistFile(join(sdkPath, "System", "Library", "CoreServices", "SystemVersion.plist"));
+    return typeof system.ProductBuildVersion === "string" ? system.ProductBuildVersion : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Xcode can install both an unversioned .sdk directory and a versioned sibling.
  * The unversioned directory is not necessarily a symlink. Prefer a versioned
@@ -219,6 +232,7 @@ export function resolveSdk({ developerDir, platform, requested = null, sdkVersio
       version: settings?.Version ?? null,
       canonicalName: canonical,
       defaultProperties: settings?.DefaultProperties ?? {},
+      productBuildVersion: sdkBuildVersion(sdkPath, settings),
       settings,
     };
   }
@@ -245,6 +259,7 @@ export function resolveSdk({ developerDir, platform, requested = null, sdkVersio
         version,
         name: sdkDisplayName(canonical, version),
         defaultProperties: settings?.DefaultProperties ?? {},
+        productBuildVersion: sdkBuildVersion(path, settings),
         settings,
       });
     }
@@ -258,6 +273,7 @@ export function resolveSdk({ developerDir, platform, requested = null, sdkVersio
       version: null,
       canonicalName: requested ?? platform,
       defaultProperties: {},
+      productBuildVersion: null,
       settings: null,
       missing: true,
     };
