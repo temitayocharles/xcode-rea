@@ -261,6 +261,10 @@ export function platformDefaults(context) {
     DEPLOYMENT_TARGET: `$(${deploymentSetting})`,
     MINIMUM_DEPLOYMENT_TARGET: deploymentTarget,
     ARCHS_STANDARD: standardArch,
+    ARCHS_STANDARD_32_64_BIT: standardArch,
+    ...(platform === "iphoneos" || platform === "iphonesimulator"
+      ? { ARCHS_UNIVERSAL_IPHONE_OS: "arm64 x86_64" }
+      : {}),
     ARCHS_STANDARD_64_BIT: standardArch,
     ARCHS_STANDARD_INCLUDING_64_BIT: standardArch,
     ARCHS_BASE: "$(ARCHS_STANDARD)",
@@ -560,6 +564,7 @@ export function genericDefaults(context) {
     DT_TOOLCHAIN_DIR: "$(TOOLCHAIN_DIR)",
     DEVELOPER_FRAMEWORKS_DIR_QUOTED: "$(DEVELOPER_FRAMEWORKS_DIR)",
     EFFECTIVE_SWIFT_VERSION: "$(SWIFT_VERSION)",
+    RPATH_ORIGIN: "@loader_path",
     PLATFORM_NAME: platform,
     SDKROOT: sdk?.path ?? SDKROOT_NAME[platform] ?? platform,
     SDK_NAME: sdk?.name ?? SDKROOT_NAME[platform] ?? platform,
@@ -604,6 +609,14 @@ export function genericDefaults(context) {
     FRAMEWORK_FLAG_PREFIX: "-framework",
     ENABLE_THREAD_SANITIZER: "NO",
     CLANG_CACHE_FINE_GRAINED_OUTPUTS: "YES",
+    DIAGNOSE_MISSING_TARGET_DEPENDENCIES: "YES",
+    COMPILATION_CACHE_KEEP_CAS_DIRECTORY: "YES",
+    SCANNING_PCM_KEEP_CACHE_DIRECTORY: "YES",
+    VALIDATE_DEVELOPMENT_ASSET_PATHS: "YES_ERROR",
+    SKIP_COPYING_TEST_FRAMEWORKS: "YES",
+    PLATFORM_REQUIRES_SWIFT_AUTOLINK_EXTRACT: "NO",
+    PLATFORM_REQUIRES_SWIFT_MODULEWRAP: "NO",
+    PLATFORM_USES_DSYMS: "YES",
     JAVA_APP_STUB: "/System/Library/Frameworks/JavaVM.framework/Resources/MacOS/JavaApplicationStub",
     SYSTEM_LIBRARY_DIR: "/System/Library",
     LINK_OBJC_RUNTIME: "YES",
@@ -734,6 +747,8 @@ export function genericDefaults(context) {
       developerDir,
     }),
     ...bundleLayoutDefaults(platform, productInfo),
+    ...(productInfo.kind === "application" && /^debug$/i.test(configuration)
+      ? { ENABLE_DEBUG_DYLIB: "YES" } : {}),
     // XCTest product-level defaults must take precedence over generic SDK
     // values; target/xcconfig/CLI overrides still win in the resolver.
     ...(productInfo.kind === "unit-test" ? {
