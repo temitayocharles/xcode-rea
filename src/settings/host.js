@@ -86,3 +86,45 @@ export function hostXcodeCacheSettings({
       "org.llvm.clang", "ModuleCache.noindex", "Session.modulevalidation"),
   };
 }
+
+/**
+ * Legacy Xcode macOS-version variables use numeric encodings rather than
+ * dotted strings: 10.12.6 -> ACTUAL=101206, MAJOR=101200, MINOR=1206.
+ * Read the executing system with sw_vers; never infer macOS from the SDK.
+ */
+export function hostMacOSVersionSettings({
+  platform = process.platform,
+  run = execFileSync,
+} = {}) {
+  if (platform !== "darwin") return {};
+  let productVersion;
+  try {
+    productVersion = String(run("sw_vers", ["-productVersion"], {
+      encoding: "utf8", timeout: 1500,
+      stdio: ["ignore", "pipe", "ignore"],
+    })).trim();
+  } catch {
+    return {};
+  }
+  const match = /^(\d{1,3})\.(\d{1,2})(?:\.(\d{1,2}))?$/.exec(productVersion);
+  if (!match) return {};
+  const major = Number(match[1]);
+  const minor = Number(match[2]);
+  const patch = Number(match[3] ?? 0);
+  const base = major * 10000 + minor * 100;
+  const result = {
+    MAC_OS_X_VERSION_ACTUAL: String(base + patch),
+    MAC_OS_X_VERSION_MAJOR: String(base),
+    MAC_OS_X_VERSION_MINOR: String(minor * 100 + patch).padStart(4, "0"),
+  };
+  try {
+    const build = String(run("sw_vers", ["-buildVersion"], {
+      encoding: "utf8", timeout: 1500,
+      stdio: ["ignore", "pipe", "ignore"],
+    })).trim();
+    if (/^[A-Za-z0-9.]+$/.test(build)) {
+      result.MAC_OS_X_PRODUCT_BUILD_VERSION = build;
+    }
+  } catch { /* version information is still usable without the build ID */ }
+  return result;
+}
