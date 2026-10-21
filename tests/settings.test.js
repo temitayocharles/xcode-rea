@@ -164,6 +164,17 @@ test("hosted XCTest output inherits its host application's PlugIns directory", (
     " @loader_path/Frameworks @executable_path/Frameworks");
   assert.equal(settings.INSTALL_DIR, "/tmp/HelloXcode.dst");
   assert.equal(settings.STRIP_STYLE, "non-global");
+  assert.equal(settings.LIBRARY_SEARCH_PATHS,
+    settings.BUILT_PRODUCTS_DIR + "   " + settings.PLATFORM_DEVELOPER_USR_DIR + "/lib");
+  assert.equal(settings.SWIFT_SYSTEM_INCLUDE_PATHS,
+    "  " + settings.PLATFORM_DEVELOPER_USR_DIR + "/lib");
+  const frameworks = settings.PLATFORM_DEVELOPER_LIBRARY_DIR + "/Frameworks";
+  assert.equal(settings.SYSTEM_FRAMEWORK_SEARCH_PATHS,
+    "  " + frameworks + " " + frameworks);
+  assert.equal(settings.PRODUCT_TYPE_SWIFT_STDLIB_TOOL_FLAGS,
+    "--scan-executable " + settings.PLATFORM_DEVELOPER_USR_DIR + "/lib/libXCTestSwiftSupport.dylib");
+  assert.equal(settings.OTHER_SWIFT_FLAGS,
+    " -plugin-path " + settings.TOOLCHAIN_DIR + "/usr/lib/swift/host/plugins/testing");
 });
 
 test("context-derived settings cannot be erased by unscoped Xcode spec defaults", () => {
