@@ -370,9 +370,15 @@ test("measured XCTest signing conditionals are resolved after SDK defaults", () 
   }).settings;
   assert.equal(overridden.ENTITLEMENTS_ALLOWED, "CUSTOM");
   assert.equal(overridden.PROVISIONING_PROFILE_REQUIRED_YES_YES, "CUSTOM");
-  const app = settingsFor({ ...options, targetName: "HelloXcode" }).settings;
+  const noSdkSigningFlags = {
+    ...options.sdk,
+    defaultProperties: {},
+  };
+  const app = settingsFor({ ...options, sdk: noSdkSigningFlags,
+    targetName: "HelloXcode" }).settings;
   assert.equal(app.PROVISIONING_PROFILE_REQUIRED_YES_YES, undefined);
-  const older = settingsFor({ ...options, xcodeVersion: "26.4" }).settings;
+  const older = settingsFor({ ...options, sdk: noSdkSigningFlags,
+    xcodeVersion: "26.4" }).settings;
   assert.equal(older.PROVISIONING_PROFILE_REQUIRED_YES_YES, undefined);
 });
 
