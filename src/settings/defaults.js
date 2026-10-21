@@ -782,16 +782,16 @@ export function genericDefaults(context) {
     ...bundleLayoutDefaults(platform, productInfo),
     ...(productInfo.kind === "application" && /^debug$/i.test(configuration)
       ? { ENABLE_DEBUG_DYLIB: "YES" } : {}),
+    // Xcode 27.1 simulator evidence associates these conditionals with the
+    // application, NOT the hosted XCTest bundle. Keep version/platform scoped.
+    ...(productInfo.kind === "application" &&
+      platform === "iphonesimulator" && String(xcodeVersion) === "27.1"
+      ? { ENTITLEMENTS_ALLOWED: "NO",
+          PROVISIONING_PROFILE_REQUIRED_YES_YES: "YES" } : {}),
     // XCTest product-level defaults must take precedence over generic SDK
     // values; target/xcconfig/CLI overrides still win in the resolver.
     ...(productInfo.kind === "unit-test" ? {
       STRIP_STYLE: "non-global",
-      // Observed in the Xcode 27.1 hosted XCTest build-settings output.
-      // Do not generalize this policy to applications, devices or other SDKs.
-      ...(platform === "iphonesimulator" && String(xcodeVersion) === "27.1" ? {
-        ENTITLEMENTS_ALLOWED: "NO",
-        PROVISIONING_PROFILE_REQUIRED_YES_YES: "YES",
-      } : {}),
       OTHER_SWIFT_FLAGS: "$(inherited) -plugin-path $(TOOLCHAIN_DIR)/usr/lib/swift/host/plugins/testing",
       LIBRARY_SEARCH_PATHS: "$(BUILT_PRODUCTS_DIR)   $(PLATFORM_DEVELOPER_USR_DIR)/lib",
       SWIFT_SYSTEM_INCLUDE_PATHS: "  $(PLATFORM_DEVELOPER_USR_DIR)/lib",
