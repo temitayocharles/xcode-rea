@@ -393,6 +393,23 @@ export function xcodeVersionSettings(version, build = null) {
   };
 }
 
+/**
+ * Per-variant intermediate lists are declared for both simulator
+ * architectures even when ONLY_ACTIVE_ARCH selects a single build arch.
+ */
+export function derivedArchitectureFileLists(architectures, variant = "normal") {
+  const result = {};
+  for (const architecture of architectures) {
+    if (!/^[A-Za-z0-9_]+$/.test(architecture) ||
+        !/^[A-Za-z0-9_]+$/.test(variant)) continue;
+    const base = `$(OBJECT_FILE_DIR_${variant})/${architecture}/$(TARGET_NAME)`;
+    result[`LINK_FILE_LIST_${variant}_${architecture}`] = `${base}.LinkFileList`;
+    result[`SWIFT_RESPONSE_FILE_PATH_${variant}_${architecture}`] = `${base}.SwiftFileList`;
+    result[`LM_AUX_CONST_METADATA_LIST_PATH_${variant}_${architecture}`] = `${base}.SwiftConstValuesFileList`;
+  }
+  return result;
+}
+
 export function genericDefaults(context) {
   const {
     project,
@@ -458,6 +475,7 @@ export function genericDefaults(context) {
     GENERATED_MODULEMAP_DIR: join(objRoot, `GeneratedModuleMaps${effectivePlatformName(platform)}`),
     OBJECT_FILE_DIR: objectFilesRoot,
     OBJECT_FILE_DIR_normal: join(targetTemp, "Objects-normal"),
+    ...derivedArchitectureFileLists(standardArchitectures(platform, hostArch).split(" ")),
     FIXED_FILES_DIR: join(targetTemp, "FixedFiles"),
     REZ_COLLECTOR_DIR: join(targetTemp, "ResourceManagerResources"),
     DWARF_DSYM_FOLDER_PATH: "$(CONFIGURATION_BUILD_DIR)",
@@ -588,6 +606,9 @@ export function genericDefaults(context) {
     CLANG_CACHE_FINE_GRAINED_OUTPUTS: "YES",
     JAVA_APP_STUB: "/System/Library/Frameworks/JavaVM.framework/Resources/MacOS/JavaApplicationStub",
     SYSTEM_LIBRARY_DIR: "/System/Library",
+    LINK_OBJC_RUNTIME: "YES",
+    NATIVE_ARCH_32_BIT: hostArch === "arm64" ? "arm" : hostArch === "x86_64" ? "i386" : "",
+    NATIVE_ARCH_64_BIT: hostArch === "arm64" ? "arm64" : hostArch === "x86_64" ? "x86_64" : "",
     // Apple Build Setting Reference defines these user-realm paths relative
     // to HOME, never the login name or project checkout location.
     USER_APPS_DIR: "$(HOME)/Applications",
@@ -600,6 +621,8 @@ export function genericDefaults(context) {
     SYSTEM_CORE_SERVICES_DIR: "/System/Library/CoreServices",
     SYSTEM_DEMOS_DIR: "/Applications/Extras",
     SYSTEM_DEVELOPER_DIR: "$(DEVELOPER_DIR)",
+    LEGACY_DEVELOPER_DIR: "$(DEVELOPER_DIR)/../PlugIns/Xcode3Core.ideplugin/Contents/SharedSupport/Developer",
+    XCODE_APP_SUPPORT_DIR: "$(DEVELOPER_DIR)/Library/Xcode",
     SYSTEM_DEVELOPER_APPS_DIR: "$(DEVELOPER_APPLICATIONS_DIR)",
     SYSTEM_DEVELOPER_BIN_DIR: "$(DEVELOPER_BIN_DIR)",
     SYSTEM_DEVELOPER_TOOLS: "$(DEVELOPER_TOOLS_DIR)",
