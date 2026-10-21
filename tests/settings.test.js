@@ -356,6 +356,29 @@ test("hosted XCTest output inherits its host application's PlugIns directory", (
     " -plugin-path " + settings.TOOLCHAIN_DIR + "/usr/lib/swift/host/plugins/testing");
 });
 
+test("Xcode 27.1 conditional linker selectors are product scoped", () => {
+  const projectPath = fixture("HelloXcode/HelloXcode.xcodeproj");
+  const common = { projectPath, xcodeVersion: "27.1" };
+  const app = settingsFor({ ...common, targetName: "HelloXcode" }).settings;
+  const unit = settingsFor({ ...common, targetName: "HelloXcodeTests" }).settings;
+  const flags = "-Xlinker -needed_framework -Xlinker XCTest -framework XCTest -Xlinker -needed-lXCTestSwiftSupport -lXCTestSwiftSupport";
+  assert.equal(app.LD_RUNPATH_SEARCH_PATHS_YES, "@loader_path/../Frameworks");
+  assert.equal(app.LD_RUNPATH_SEARCH_PATHS_SHALLOW_BUNDLE_NO, undefined);
+  assert.equal(app.PRODUCT_SPECIFIC_LDFLAGS, undefined);
+  assert.equal(unit.LD_RUNPATH_SEARCH_PATHS_YES, undefined);
+  assert.equal(unit.LD_RUNPATH_SEARCH_PATHS_SHALLOW_BUNDLE_NO, "@loader_path/../Frameworks");
+  assert.equal(unit.LD_RUNPATH_SEARCH_PATHS_SHALLOW_BUNDLE_YES, "@loader_path/Frameworks");
+  assert.equal(unit.PRODUCT_SPECIFIC_LDFLAGS, flags);
+  assert.equal(unit.PRODUCT_SPECIFIC_LDFLAGS_NO_XCTEST_NO, flags);
+  assert.equal(unit.PRODUCT_TYPE_SWIFT_STDLIB_TOOL_FLAGS_NO_XCTEST_NO,
+    "--scan-executable " + unit.PLATFORM_DEVELOPER_USR_DIR + "/lib/libXCTestSwiftSupport.dylib");
+  const overridden = settingsFor({ ...common, targetName: "HelloXcodeTests",
+    overrides: { PRODUCT_SPECIFIC_LDFLAGS: "-Wl,custom" } }).settings;
+  assert.equal(overridden.PRODUCT_SPECIFIC_LDFLAGS, "-Wl,custom");
+  const previous = settingsFor({ ...common, targetName: "HelloXcodeTests", xcodeVersion: "26.4" }).settings;
+  assert.equal(previous.PRODUCT_SPECIFIC_LDFLAGS, undefined);
+});
+
 test("Xcode 27.1 simulator signing conditionals belong to app, not XCTest", () => {
   const projectPath = fixture("HelloXcode/HelloXcode.xcodeproj");
   const base = {
