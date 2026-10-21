@@ -132,7 +132,7 @@ test("on macOS symbolic SDK selects the exact directory spelling returned by xcr
   let invocations = 0;
   const selected = resolveSdk({
     developerDir: directory, platform: "iphonesimulator", requested: "iphonesimulator",
-    hostPlatform: "darwin",
+    hostPlatform: "darwin", useXcrun: true,
     runXcrun(cmd, args) {
       invocations += 1;
       assert.equal(cmd, "xcrun");
@@ -144,6 +144,23 @@ test("on macOS symbolic SDK selects the exact directory spelling returned by xcr
   assert.equal(selected.path, alias, "preserve Apple-selected path, not realpath alias");
   assert.equal(selected.version, "27.1");
   assert.equal(selected.name, "iphonesimulator27.1");
+});
+
+test("Mac tests with synthetic developer directories never call host xcrun", (t) => {
+  const developerDir = mkdtempSync(join(tmpdir(), "xcl-sdk-isolated-"));
+  t.after(() => rmSync(developerDir, { recursive: true, force: true }));
+  const path = join(developerDir, "Platforms", "iPhoneSimulator.platform",
+    "Developer", "SDKs", "iPhoneSimulator27.1.sdk");
+  mkdirSync(path, { recursive: true });
+  writeFileSync(join(path, "SDKSettings.plist"), `<?xml version="1.0"?>
+    <plist version="1.0"><dict><key>CanonicalName</key><string>iphonesimulator</string>
+    <key>Version</key><string>27.1</string></dict></plist>`);
+  const sdk = resolveSdk({
+    developerDir, platform: "iphonesimulator", requested: "iphonesimulator",
+    hostPlatform: "darwin",
+    runXcrun() { throw new Error("must not use real installed xcrun"); },
+  });
+  assert.equal(sdk.path, realpathSync(path));
 });
 
 test("xcrun selection falls back safely if command unavailable or SDK mismatched", (t) => {
