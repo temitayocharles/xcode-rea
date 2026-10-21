@@ -99,7 +99,23 @@ export function parseSpecFile(path) {
  * Returns `{ defaults, files, definitions, warnings }`.
  */
 const specCache = new Map();
-const CACHE_VERSION = 4;
+const CACHE_VERSION = 5;
+
+function installedToolchainFingerprint(developerDir) {
+  if (!developerDir) return "no-toolchain";
+  // The Xcode bundle version changes whenever the installed Xcode is
+  // upgraded. Cache keys must not survive a toolchain update at the same path.
+  // Include file content rather than mtime, which can survive restored copies.
+  for (const path of [join(developerDir, "..", "version.plist"),
+    join(developerDir, "..", "Info.plist")]) {
+    try {
+      return createHash("sha256").update(readFileSync(path)).digest("hex");
+    } catch {
+      // Command Line Tools and fixture directories may lack these files.
+    }
+  }
+  return "unknown-toolchain";
+}
 
 function diskCacheFile(cacheKey) {
   const root =
@@ -133,7 +149,7 @@ function writeDiskCache(cacheKey, payload) {
 }
 
 export function loadXcodeSpecDefaults({ developerDir, platforms = null } = {}) {
-  const cacheKey = `${developerDir ?? ""}|${platforms ? [...platforms].sort().join(",") : "*"}`;
+  const cacheKey = `${developerDir ?? ""}|${platforms ? [...platforms].sort().join(",") : "*"}|${installedToolchainFingerprint(developerDir)}`;
   if (specCache.has(cacheKey)) return specCache.get(cacheKey);
   const cached = readDiskCache(cacheKey);
   if (cached) {
