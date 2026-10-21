@@ -186,7 +186,11 @@ export function summarizeMissingReferenceValues(report, { limit = 35 } = {}) {
     if (d.kind !== "missing" || !DIAGNOSTIC_REFERENCE_KEYS.has(d.key)) continue;
     if (seen.has(d.key) || typeof d.xcodebuild !== "string") continue;
     seen.add(d.key);
-    output.push(`  ${d.key} = ${redactSettingValue(d.xcodebuild)}`);
+    // Target identity is not private and distinguishes app versus XCTest
+    // conditionals when a setting is missing for only one build target.
+    const targetLabel = /^[A-Za-z0-9_]+$/.test(d.target ?? "")
+      ? `${d.target}.` : "";
+    output.push(`  ${targetLabel}${d.key} = ${redactSettingValue(d.xcodebuild)}`);
     if (seen.size >= limit) break;
   }
   const pathKeys = ["SDK_STAT_CACHE_DIR", "SDK_STAT_CACHE_PATH",
