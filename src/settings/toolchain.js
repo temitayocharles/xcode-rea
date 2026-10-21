@@ -241,7 +241,7 @@ export function xcrunSelectedSdkPath(sdkName, {
  * Resolve an SDK for a platform. `requested` may be a name (iphonesimulator),
  * a versioned name (iphonesimulator18.0), or an absolute path to an .sdk.
  */
-export function resolveSdk({ developerDir, platform, requested = null, sdkVersion = null, hostPlatform = process.platform, runXcrun = execFileSync }) {
+export function resolveSdk({ developerDir, platform, requested = null, sdkVersion = null, hostPlatform = process.platform, runXcrun = execFileSync, useXcrun = null }) {
   if (requested && requested.endsWith(".sdk") && existsSync(requested)) {
     const actualPath = realpathSync(requested);
     const settings = readSdkSettings(actualPath);
@@ -264,7 +264,13 @@ export function resolveSdk({ developerDir, platform, requested = null, sdkVersio
   // enumeration as a fallback for Linux, offline fixtures and unsupported SDKs.
   // A requested OS version without an explicit SDK should still be resolved by
   // normal version matching below.
-  if (!sdkVersion || requested) {
+  // Never let a real Mac's installed SDK replace a synthetic/offline
+  // developerDir fixture. Calls from CLI use a genuine Xcode/CLT directory;
+  // test fixtures opt in explicitly with useXcrun=true and a mocked runner.
+  const isInstalledDeveloperDir = typeof developerDir === "string" &&
+    /(?:\/Contents\/Developer|\/Library\/Developer\/CommandLineTools)$/.test(developerDir);
+  const shouldUseXcrun = useXcrun ?? isInstalledDeveloperDir;
+  if (shouldUseXcrun && (!sdkVersion || requested)) {
     const selected = xcrunSelectedSdkPath(requested || platform, {
       hostPlatform, run: runXcrun,
     });
