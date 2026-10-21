@@ -84,7 +84,7 @@ test("host macOS version settings encode product and build versions from sw_vers
   assert.deepEqual(data, {
     MAC_OS_X_VERSION_ACTUAL: "270001",
     MAC_OS_X_VERSION_MAJOR: "270000",
-    MAC_OS_X_VERSION_MINOR: "0001",
+    MAC_OS_X_VERSION_MINOR: "1",
     MAC_OS_X_PRODUCT_BUILD_VERSION: "26A123",
   });
   const historical = hostMacOSVersionSettings({
