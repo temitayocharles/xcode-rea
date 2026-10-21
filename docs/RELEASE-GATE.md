@@ -109,17 +109,18 @@ Not automated, because it depends on what the app does:
 
 ## What these gates do not prove
 
-- On macOS 27.0.1 / Xcode 27.1, the HelloXcode fixture **passed 104
+- On macOS / Xcode 27.1, the HelloXcode fixture **passed 107
   regression tests**, compiled, packaged, passed code-signing/arm64
   verification, and matched project structure. The last measured settings
-  gate still failed: **45 differing values and 199 missing occurrences
+  gate still failed: **45 differing values and 191 missing occurrences
   across two targets**.
-- Subsequent changes read Xcode platform bundle `Info.plist`
-  `DefaultProperties` as a lower-priority contextual layer and discover
-  SDK/platform build identifiers only when installed Apple metadata provides
-  them. The expanded **107/107 Node regressions pass in isolated validation**.
-  These improvements have NOT been measured by another genuine Mac run.
-  No private Xcode cache or signing setting is fabricated to satisfy parity.
+- Subsequent changes use Apple's own active SDK path from `xcrun` for symbolic
+  SDK names (while protecting synthetic fixture projects) and derive
+  `CACHE_ROOT`, `CCHROOT` and clang's module-validation cache location
+  from `getconf DARWIN_USER_CACHE_DIR` and installed Xcode version/build.
+  These changes are validated by **112/112 Node regressions**, but have
+  NOT been measured by another genuine Mac run. Private Xcode state is
+  not manufactured, and strict settings parity remains the release gate.
 - Missing settings now include their Xcode reference values in the detailed
   JSON report. The complete artifact can contain local paths and identities;
   review it before sharing or committing.
