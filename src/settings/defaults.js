@@ -2,6 +2,7 @@ import { homedir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { sha256 } from "../util/text.js";
 import { productTypeInfo } from "./productTypes.js";
+import { hostAccountSettings } from "./host.js";
 
 /**
  * Xcode's DerivedData directory name includes a stable 28-character hash that
@@ -533,6 +534,7 @@ export function genericDefaults(context) {
       developerDir,
     }),
     ...bundleLayoutDefaults(platform, productInfo),
+    ...hostAccountSettings(),
   };
 }
 
