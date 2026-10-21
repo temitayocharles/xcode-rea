@@ -495,6 +495,19 @@ export function resolveBuildSettings(options) {
     const deploymentKey = deploymentTargetSetting(platform);
     finalSettings.DEPLOYMENT_TARGET = finalSettings[deploymentKey] ?? "";
   }
+  // Query-time architecture is separate from the full build architecture
+  // set. Xcode reports "multiple_archs" when the latter contains >1 member.
+  if (finalSettings.ONLY_ARCH === undefined) {
+    const requested = String(finalSettings.ARCHS ?? "").trim().split(/\s+/).filter(Boolean);
+    finalSettings.ONLY_ARCH = requested.length > 1
+      ? "multiple_archs" : (requested[0] ?? "");
+  }
+  if (finalSettings.RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET === undefined &&
+      (platform === "iphoneos" || platform === "iphonesimulator") &&
+      finalSettings.IPHONEOS_DEPLOYMENT_TARGET) {
+    finalSettings.RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET =
+      finalSettings.IPHONEOS_DEPLOYMENT_TARGET;
+  }
   // Whether the resolved compiler configuration is unoptimized depends on
   // effective target settings, not merely the configuration's name.
   if (finalSettings.IS_UNOPTIMIZED_BUILD === undefined) {
