@@ -149,7 +149,30 @@ const DIAGNOSTIC_REFERENCE_KEYS = new Set([
   "SKIP_COPYING_TEST_FRAMEWORKS", "TVOS_DEPLOYMENT_TARGET",
   "WATCHOS_DEPLOYMENT_TARGET", "XROS_DEPLOYMENT_TARGET",
   "SUPPORTS_ON_DEMAND_RESOURCES", "VALIDATE_DEVELOPMENT_ASSET_PATHS",
+  // These are Boolean profile capabilities, never identities or profile IDs.
+  "PROVISIONING_PROFILE_REQUIRED", "PROVISIONING_PROFILE_SUPPORTED",
+  "PROVISIONING_PROFILE_REQUIRED_YES_YES", "ENTITLEMENTS_ALLOWED",
 ]);
+/**
+ * Report only non-sensitive structural categories for dynamic path defaults.
+ * Never print local user directories, filenames, identity digests, or PATH.
+ */
+export function redactedXcodeCachePathKind(value) {
+  if (typeof value !== "string" || !value.startsWith("/")) return "<missing-or-nonabsolute>";
+  if (/\/SDKStatCaches\.noindex\/[^/]+\.sdkstatcache$/.test(value)) {
+    return "<derived-data>/SDKStatCaches.noindex/<SDK-specific-digest>.sdkstatcache";
+  }
+  if (/\/CompilationCache\.noindex$/.test(value)) {
+    return "<derived-data-or-cache>/CompilationCache.noindex";
+  }
+  if (/\/DerivedData\/?$/.test(value)) {
+    return "<Xcode DerivedData root>";
+  }
+  if (/\.xcodeproj\/?$/.test(value)) return "<project>.xcodeproj";
+  if (/\.xcworkspace\/?$/.test(value)) return "<workspace>.xcworkspace";
+  return "<other absolute filesystem path>";
+}
+
 export function summarizeMissingReferenceValues(report, { limit = 35 } = {}) {
   if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
     throw new RangeError("limit must be an integer between 1 and 100");
@@ -165,6 +188,18 @@ export function summarizeMissingReferenceValues(report, { limit = 35 } = {}) {
     seen.add(d.key);
     output.push(`  ${d.key} = ${redactSettingValue(d.xcodebuild)}`);
     if (seen.size >= limit) break;
+  }
+  const pathKeys = ["SDK_STAT_CACHE_DIR", "SDK_STAT_CACHE_PATH",
+    "COMPILATION_CACHE_CAS_PATH", "WORKSPACE_DIR", "GENERATED_TEST_ENTRY_POINT_PATH"];
+  const pathRows = gate.differences.filter((row) =>
+    row.kind === "missing" && pathKeys.includes(row.key) &&
+    typeof row.xcodebuild === "string");
+  if (pathRows.length > 0) {
+    output.push("SELECTED DYNAMIC PATH SHAPES (no private roots or digests)");
+    for (const [key, value] of new Map(pathRows.map((row) =>
+      [row.key, redactedXcodeCachePathKind(row.xcodebuild)]))) {
+      output.push(`  ${key} = ${value}`);
+    }
   }
   return output.join("\n");
 }
