@@ -116,8 +116,10 @@ Not automated, because it depends on what the app does:
   29 missing settings** across two targets (15 app, 14 XCTest).
 - Two subsequent Xcode-27.1-only hosted XCTest simulator-signing conditional
   values (ENTITLEMENTS_ALLOWED and PROVISIONING_PROFILE_REQUIRED_YES_YES)
-  now have dedicated regression assertions, but their effect has NOT yet
-  been measured on macOS. The current **128/128 Node regressions pass** in
+  now have dedicated regression assertions, and a scoped post-resolution
+  fallback was added for unresolved XCTest flags. Missing-value diagnostics
+  now identify the affected target. These changes have NOT yet been measured
+  on macOS; the last hardware checkpoint remains 0/29. The current **129/129 Node regressions pass** in
   isolated validation. The remaining missing entries include SDK stat-cache
   and compilation-cache paths, Xcode-injected PATH, Swift protocol metadata,
   conditional runpaths, and Xcode-private internal state. Do not synthesize
