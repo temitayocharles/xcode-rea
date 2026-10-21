@@ -399,6 +399,21 @@ test("generic defaults expose a broad settings table", () => {
   assert.ok(Object.keys(defaults).length > 80);
 });
 
+test("showBuildSettings preserves whitespace produced by inherited values", () => {
+  const { settings } = expandSettings({
+    PREPROCESSOR_FLAGS: "DEBUG=1 ",
+    SWIFT_CONDITIONS: "DEBUG ",
+    LEADING_SEARCH_PATH: " /Developer/Frameworks",
+    SPACED_EMPTY: " ",
+    INTERNAL_SPACE: "foo    bar",
+  });
+  assert.equal(settings.PREPROCESSOR_FLAGS, "DEBUG=1 ");
+  assert.equal(settings.SWIFT_CONDITIONS, "DEBUG ");
+  assert.equal(settings.LEADING_SEARCH_PATH, " /Developer/Frameworks");
+  assert.equal(settings.SPACED_EMPTY, " ");
+  assert.equal(settings.INTERNAL_SPACE, "foo bar");
+});
+
 test("nested references expand inside a setting name", () => {
   const { settings } = expandSettings({
     XCODE_VERSION_MAJOR: "1600",
