@@ -70,6 +70,25 @@ test("SDK version numbers follow Xcode's major-minor-patch format", () => {
   assert.deepEqual(sdkVersionSettings("unknown"), {});
 });
 
+test("platform condition selectors follow the selected SDK family", () => {
+  const projectPath = fixture("HelloXcode/HelloXcode.xcodeproj");
+  const simulator = settingsFor({
+    projectPath, targetName: "HelloXcode", platform: "iphonesimulator",
+  }).settings;
+  assert.equal(simulator.__IS_NOT_MACOS, "YES");
+  assert.equal(simulator.__IS_NOT_MACOS_macosx, "NO");
+  assert.equal(simulator.__IS_NOT_SIMULATOR, "NO");
+  assert.equal(simulator.__IS_NOT_SIMULATOR_simulator, "NO");
+  assert.equal(simulator.__ORIGINAL_SDK_DEFINED_LLVM_TARGET_TRIPLE_SYS, "ios");
+  const device = settingsFor({
+    projectPath, targetName: "HelloXcode", platform: "iphoneos",
+  }).settings;
+  assert.equal(device.__IS_NOT_MACOS, "YES");
+  assert.equal(device.__IS_NOT_SIMULATOR, "YES");
+  assert.equal(device.__ORIGINAL_SDK_DEFINED_LLVM_TARGET_TRIPLE_SYS, "ios");
+  assert.equal(device.__ARCHS__, undefined);
+});
+
 test("measured cross-platform deployment defaults apply to Xcode 27.1 only", () => {
   const measured = xcode271ObservedDeploymentDefaults("27.1");
   assert.deepEqual(measured, {
