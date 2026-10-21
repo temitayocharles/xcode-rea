@@ -109,7 +109,7 @@ Not automated, because it depends on what the app does:
 
 ## What these gates do not prove
 
-- On macOS / Xcode 27.1, the HelloXcode fixture **passed 128
+- On macOS / Xcode 27.1, the HelloXcode fixture **passed 131
   regression tests**, compiled and packaged the real simulator app, passed
   code-signing/arm64 verification, and matched project structure. The latest
   real hardware settings gate still failed: **zero value mismatches and
@@ -120,7 +120,7 @@ Not automated, because it depends on what the app does:
   defaults and post-resolution fallback are now correctly scoped to the app;
   XCTest remains unaffected and higher-priority overrides retain precedence.
   This correction passes regressions but has NOT yet been measured on macOS;
-  the latest hardware checkpoint is 0/21. The current **131/131 Node regressions pass** in
+  the latest hardware checkpoint is 0/21. The current **132/132 Node regressions pass** in
   isolated validation. The remaining missing entries include SDK stat-cache
   and compilation-cache paths, Xcode-injected PATH, Swift protocol metadata,
   conditional runpaths, and Xcode-private internal state. Do not synthesize
@@ -142,3 +142,5 @@ is a hypothesis, not a result.
 - After that Mac checkpoint, the resolver now derives selected non-opaque SDK/platform conditional selector values (`__IS_NOT_MACOS`, `__IS_NOT_SIMULATOR`, and related selectors) and the original iOS LLVM triple system, based on public Xcode build-output evidence. The resulting 130/130 isolated tests pass. `__ARCHS__` and generated/private state remain intentionally unresolved, and no new Mac result is claimed.
 
 - Latest post-Mac diagnostics now include the exact conditional linker-selector references (`LD_RUNPATH_SEARCH_PATHS_SHALLOW_BUNDLE_*`, `PRODUCT_SPECIFIC_LDFLAGS*`, and `PRODUCT_TYPE_SWIFT_STDLIB_TOOL_FLAGS_NO_XCTEST_NO`), with absolute paths redacted. The comparator is unchanged; reference values are **not** silently installed as defaults. The full isolated regression suite passes 131/131. Mac effect remains unmeasured.
+
+- After the latest real 0/21 Mac checkpoint, six conditional product linker values were reconstructed from the Mac certifier's redacted **reference values**, scoped to Xcode 27.1 iOS Simulator application or hosted XCTest targets: `LD_RUNPATH_SEARCH_PATHS_YES`, `LD_RUNPATH_SEARCH_PATHS_SHALLOW_BUNDLE_NO/YES`, `PRODUCT_SPECIFIC_LDFLAGS`, `PRODUCT_SPECIFIC_LDFLAGS_NO_XCTEST_NO`, and `PRODUCT_TYPE_SWIFT_STDLIB_TOOL_FLAGS_NO_XCTEST_NO`. An added test protects product, version and explicit-override precedence; the isolated regression suite passes 132/132. The post-change Mac effect is not yet measured. Do not claim those six are certified until `certify:mac` passes.
