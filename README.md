@@ -23,14 +23,13 @@ node bin/xcl.mjs -project ~/Projects/Hello/Hello.xcodeproj -scheme Hello \
 
 > Status: **0.1.0 — macOS build and signing verified, settings parity incomplete.**
 >
-> On macOS 27.0.1 / Xcode 27.1, a fresh-branch run on Apple Silicon passed the
-> repository's 79 tests and the macOS verification harness's project-structure,
-> real build, and signed product/architecture gates for the HelloXcode iOS
-> simulator fixture. The settings comparison **failed with 52 differing values
-> and 895 missing target-setting occurrences** across two targets. These are
-> not necessarily unique settings. A full compatibility/release claim is still
-> blocked on reconciliation against the installed Xcode. The
-> [release gate](docs/RELEASE-GATE.md) records these evidence boundaries.
+> On macOS 27.0.1 / Xcode 27.1, the Apple Silicon HelloXcode fixture passed
+> **97/97 Node tests**, project structure, real simulator compilation, bundle
+> signing, and arm64 architecture validation. The same hardware run still found
+> **134 value differences and 248 missing setting occurrences** across the app
+> and test targets. These are occurrences, not unique setting keys. Later
+> context-derived settings improvements are committed but not yet certified on
+> Mac. See the [release gate](docs/RELEASE-GATE.md) for evidence boundaries.
 >
 > Test execution, Swift Package resolution, archives/notarization and Interface
 > Builder *editing* are deliberately out of scope. See
@@ -290,12 +289,11 @@ Claims here are deliberately split into two levels:
 
 An Apple Silicon Mac running Xcode 27.1 has successfully built, signed,
 and passed architecture verification for the HelloXcode fixture. Its last
-full hardware certification reported **162 value differences and 282 missing
+full hardware certification reported **134 value differences and 248 missing
 setting occurrences** across the application and test targets. Full
-`-showBuildSettings` parity remains unverified. The later SDK alias,
-DerivedSources, platform metadata, non-compiling architecture-query and
-local-account fixes have unit/regression coverage, but have **not** yet
-been exercised by the hardware release gate.
+`-showBuildSettings` parity remains unverified. Additional project-identity
+and wrapper-layout defaults are now unit-tested but have **not** yet been
+exercised by the hardware release gate.
 
 For one complete Mac regression, build and differential check:
 
