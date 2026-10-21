@@ -84,7 +84,7 @@ test("host macOS version settings encode product and build versions from sw_vers
   assert.deepEqual(data, {
     MAC_OS_X_VERSION_ACTUAL: "270001",
     MAC_OS_X_VERSION_MAJOR: "270000",
-    MAC_OS_X_VERSION_MINOR: "1",
+    MAC_OS_X_VERSION_MINOR: "270000",
     MAC_OS_X_PRODUCT_BUILD_VERSION: "26A123",
   });
   const historical = hostMacOSVersionSettings({
@@ -95,7 +95,7 @@ test("host macOS version settings encode product and build versions from sw_vers
   });
   assert.equal(historical.MAC_OS_X_VERSION_ACTUAL, "101206");
   assert.equal(historical.MAC_OS_X_VERSION_MAJOR, "101200");
-  assert.equal(historical.MAC_OS_X_VERSION_MINOR, "1206");
+  assert.equal(historical.MAC_OS_X_VERSION_MINOR, "101200");
 });
 
 test("host OS metadata is absent or bounded when sw_vers is unavailable", () => {
