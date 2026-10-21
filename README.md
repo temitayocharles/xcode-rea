@@ -24,12 +24,12 @@ node bin/xcl.mjs -project ~/Projects/Hello/Hello.xcodeproj -scheme Hello \
 > Status: **0.1.0 — macOS build and signing verified, settings parity incomplete.**
 >
 > On macOS 27.0.1 / Xcode 27.1, the Apple Silicon HelloXcode fixture passed
-> **121/121 Node tests**, project structure, real simulator compilation, bundle
-> signing, and arm64 architecture validation. The same hardware run still found
-> **1 differing value and 111 missing setting occurrences** across the app
+> **124/124 Node tests**, project structure, real simulator compilation, bundle
+> signing, and arm64 architecture validation. The same hardware run had
+> **0 differing values and 80 missing setting occurrences** across the app
 > and test targets. These are occurrences, not unique settings. Subsequent
-> XCTest SDK search-path and documented intermediate/user/toolchain setting
-> corrections pass **124 Node tests**, but have not yet been certified on Mac.
+> context-derived architecture, build-policy and version-scoped deployment
+> defaults pass **126 Node tests**, but are not yet Mac-certified.
 > See the [release gate](docs/RELEASE-GATE.md) for evidence boundaries.
 >
 > Test execution, Swift Package resolution, archives/notarization and Interface
@@ -290,14 +290,15 @@ Claims here are deliberately split into two levels:
 
 An Apple Silicon Mac running Xcode 27.1 has successfully built, signed,
 and passed architecture verification for the HelloXcode fixture. Its last
-full hardware certification reported **1 differing value and 111 missing
+full hardware certification reported **0 differing values and 80 missing
 setting occurrences** across the application and test targets. Full
-`-showBuildSettings` parity remains unverified. Subsequent changes correct
-the XCTest framework search path using distinct platform and SDK roots;
-derive user, developer, system-extension and per-architecture Swift/link
-file-list settings; and selectively display safe reference values for
-unimplemented settings. These changes pass regressions but **are not yet
-Mac-certified**. Private Xcode internal values are not fabricated or ignored.
+`-showBuildSettings` parity remains unverified. Subsequent changes derive
+platform architecture sets, conditional compilation/build policy flags,
+runtime origin and effective architecture/deployment settings, with an
+explicit Xcode 27.1-only profile for cross-platform deployment defaults
+measured in the Mac report. These changes pass regressions but **are not yet
+Mac-certified**. Private Xcode internals, signing identities and cache paths
+are not fabricated or ignored.
 
 For one complete Mac regression, build and differential check:
 
@@ -320,7 +321,7 @@ silently disappearing from a commit.
 ## Development
 
 ```bash
-npm test                    # 124 tests, no dependencies, ~3 seconds
+npm test                    # 126 tests, no dependencies, ~3 seconds
 npm run demo                # list the fixture project
 npm run demo:settings       # resolve settings for the fixture
 npm run demo:plan           # print a build plan
