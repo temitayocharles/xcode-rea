@@ -124,3 +124,24 @@ test("missing optional paired platforms and SDKs never produce invented paths", 
   assert.equal(data.CORRESPONDING_DEVICE_PLATFORM_NAME, "iphoneos");
   assert.equal(data.CORRESPONDING_DEVICE_SDK_NAME, undefined);
 });
+
+test("Xcode 27 reports virtual platform names even without SDK directories", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "xcl-xcode27-platforms-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const developerDir = join(root, "Xcode.app", "Contents", "Developer");
+  const simulator = join(developerDir, "Platforms", "iPhoneSimulator.platform");
+  mkdirSync(simulator, { recursive: true });
+  const modern = installedPlatformEnvironment({
+    developerDir, platform: "iphonesimulator", xcodeVersion: "27.1",
+    hostPlatform: "linux",
+  });
+  for (const name of ["android", "freebsd", "linux", "none", "openbsd", "qnx", "staticlinux", "webassembly", "iphonesimulator"]) {
+    assert.ok(modern.AVAILABLE_PLATFORMS.split(" ").includes(name), name);
+  }
+  assert.equal(modern.AVAILABLE_PLATFORMS.split(" ").length, 9);
+  const old = installedPlatformEnvironment({
+    developerDir, platform: "iphonesimulator", xcodeVersion: "26.4",
+    hostPlatform: "linux",
+  });
+  assert.equal(old.AVAILABLE_PLATFORMS, "iphonesimulator");
+});
