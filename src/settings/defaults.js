@@ -425,7 +425,13 @@ export function genericDefaults(context) {
     WRAPPER_SUFFIX: productInfo.wrapperExtension ? `.${productInfo.wrapperExtension}` : "",
     EXTENSIONS_FOLDER_PATH: "$(CONTENTS_FOLDER_PATH)/Extensions",
     SYSTEM_EXTENSIONS_FOLDER_PATH: "$(CONTENTS_FOLDER_PATH)/SystemExtensions",
-    PACKAGE_TYPE: target?.productType ?? "",
+    PACKAGE_TYPE: productInfo.kind === "application"
+      ? "com.apple.package-type.wrapper.application"
+      : productInfo.kind === "unit-test"
+        ? "com.apple.package-type.bundle.unit-test"
+        : productInfo.kind === "framework"
+          ? "com.apple.package-type.wrapper.framework"
+          : "",
     VERSION_INFO_FILE: "$(PRODUCT_NAME)_vers.c",
     VERSION_INFO_BUILDER: "$(ALTERNATE_OWNER)",
     LOCROOT: projectDir,
