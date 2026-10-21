@@ -1,7 +1,7 @@
 import { basename, dirname, extname, join, normalize, relative } from "node:path";
 import { readXcconfig, parseConditionalKey } from "../xcode/xcconfig.js";
 import { matchesGlob } from "../util/text.js";
-import { genericDefaults, deploymentTargetSetting } from "./defaults.js";
+import { genericDefaults, deploymentTargetSetting, installedPlatformProperties } from "./defaults.js";
 
 const INHERITED_PATTERN = /\$\(inherited\)|\$\{inherited\}/g;
 
@@ -402,6 +402,12 @@ export function resolveBuildSettings(options) {
   // settings still supersede both. Applying specs AFTER computed defaults was
   // responsible for empty ACTION/ARCHS, incorrect paths and signing values.
   if (specDefaults) pushLayer("xcode-spec-defaults", specDefaults);
+  // An installed platform's conditional DefaultProperties are more specific
+  // than generic Xcode specs, but still lower-priority than computed context.
+  const platformProperties = installedPlatformProperties(developerDir, platform);
+  if (Object.keys(platformProperties).length > 0) {
+    pushLayer("xcode-platform-defaults", platformProperties);
+  }
   pushLayer("defaults", defaults);
 
   const projectConfig = findConfiguration(project, project.projectConfigurations(), configuration);
