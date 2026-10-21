@@ -57,6 +57,32 @@ const MINIMUM_DEPLOYMENT_TARGET = {
   xrsimulator: "1.0",
 };
 
+const PLATFORM_LABELS = {
+  iphoneos: ["iOS", "iOS", "arm64"],
+  iphonesimulator: ["iOS Simulator", "iOS", null],
+  macosx: ["macOS", "macOS", null],
+  appletvos: ["tvOS", "tvOS", "arm64"],
+  appletvsimulator: ["tvOS Simulator", "tvOS", null],
+  watchos: ["watchOS", "watchOS", "arm64_32"],
+  watchsimulator: ["watchOS Simulator", "watchOS", null],
+  xros: ["visionOS", "visionOS", "arm64"],
+  xrsimulator: ["visionOS Simulator", "visionOS", null],
+};
+
+export function sdkVersionSettings(version) {
+  const match = /^(\d+)(?:\.(\d+))?(?:\.(\d+))?/.exec(String(version ?? ""));
+  if (!match) return {};
+  const major = Number(match[1]);
+  const minor = Number(match[2] ?? 0);
+  const patch = Number(match[3] ?? 0);
+  if (major > 999 || minor > 99 || patch > 99) return {};
+  return {
+    SDK_VERSION_ACTUAL: String(major * 10000 + minor * 100 + patch),
+    SDK_VERSION_MAJOR: String(major * 10000),
+    SDK_VERSION_MINOR: String(minor * 100 + patch),
+  };
+}
+
 const PLATFORM_DIR_NAME = {
   iphoneos: "iPhoneOS",
   iphonesimulator: "iPhoneSimulator",
@@ -163,16 +189,22 @@ export function platformDefaults(context) {
   const platformDir = developerDir ? join(developerDir, "Platforms", `${PLATFORM_DIR_NAME[platform] ?? platform}.platform`) : "";
   const platformDeveloperDir = platformDir ? join(platformDir, "Developer") : "";
   const standardArch = standardArchitectures(platform, hostArch);
+  const [displayName, familyName, preferredArch] = PLATFORM_LABELS[platform] ?? [platform, platform, null];
 
   const defaults = {
     SDKROOT: sdk?.path ?? sdkRoot,
     PLATFORM_NAME: platform,
+    PLATFORM_DISPLAY_NAME: displayName,
+    PLATFORM_FAMILY_NAME: familyName,
+    PLATFORM_PREFERRED_ARCH: preferredArch ?? hostArch,
     EFFECTIVE_PLATFORM_NAME: effectivePlatformName(platform),
     SUPPORTED_PLATFORMS: SUPPORTED_PLATFORMS[platform] ?? platform,
     [deploymentSetting]: deploymentTarget,
     DEPLOYMENT_TARGET: `$(${deploymentSetting})`,
     MINIMUM_DEPLOYMENT_TARGET: deploymentTarget,
     ARCHS_STANDARD: standardArch,
+    ARCHS_STANDARD_64_BIT: standardArch,
+    ARCHS_STANDARD_INCLUDING_64_BIT: standardArch,
     ARCHS_BASE: "$(ARCHS_STANDARD)",
     VALID_ARCHS: standardArch,
     DEPLOYMENT_TARGET_SETTING_NAME: deploymentSetting,
@@ -190,6 +222,14 @@ export function platformDefaults(context) {
     defaults.SDK_NAME = sdk.name;
     defaults.SDK_VERSION = sdk.version;
     defaults.SDK_DIR = sdk.path;
+    Object.assign(defaults, sdkVersionSettings(sdk.version));
+    if (sdk.path) {
+      defaults[`SDK_DIR_${platform}`] = sdk.path;
+      if (sdk.version) defaults[`SDK_DIR_${platform}${String(sdk.version).replace(/\./g, "_")}`] = sdk.path;
+    }
+    if (sdk.settings?.ProductBuildVersion) {
+      defaults.SDK_PRODUCT_BUILD_VERSION = String(sdk.settings.ProductBuildVersion);
+    }
   } else {
     defaults.SDK_NAME = sdkRoot;
   }
@@ -352,7 +392,7 @@ export function genericDefaults(context) {
     DERIVED_FILE_DIR: derivedSources,
     DERIVED_FILES_DIR: "$(DERIVED_FILE_DIR)",
     DERIVED_SOURCES_DIR: "$(DERIVED_FILE_DIR)",
-    SHARED_DERIVED_FILE_DIR: "$(DERIVED_FILE_DIR)/Shared",
+    SHARED_DERIVED_FILE_DIR: "$(BUILT_PRODUCTS_DIR)/DerivedSources",
     OBJECT_FILE_DIR: objectFilesRoot,
     OBJECT_FILE_DIR_normal: join(targetTemp, "Objects-normal"),
     FIXED_FILES_DIR: join(targetTemp, "FixedFiles"),
