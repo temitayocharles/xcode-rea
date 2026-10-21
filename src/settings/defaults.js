@@ -3,7 +3,7 @@ import { readPlistFile } from "../plist/index.js";
 import { basename, dirname, join } from "node:path";
 import { sha256 } from "../util/text.js";
 import { productTypeInfo } from "./productTypes.js";
-import { hostAccountSettings, hostXcodeCacheSettings } from "./host.js";
+import { hostAccountSettings, hostXcodeCacheSettings, hostMacOSVersionSettings } from "./host.js";
 
 /**
  * Xcode's DerivedData directory name includes a stable 28-character hash that
@@ -656,6 +656,7 @@ export function genericDefaults(context) {
       SWIFTC_PASS_SYSROOT: "NO",
     } : {}),
     ...hostAccountSettings(),
+    ...hostMacOSVersionSettings(),
     ...hostXcodeCacheSettings({ version: xcodeVersion, build: xcodeBuild }),
   };
 }
