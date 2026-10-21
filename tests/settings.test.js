@@ -174,6 +174,12 @@ test("HelloXcode Debug simulator settings", () => {
   const fixtureProject = loadProject(fixture("HelloXcode/HelloXcode.xcodeproj"));
   assert.equal(settings.PROJECT, fixtureProject.name);
   assert.equal(settings.PROJECT_GUID, "4a043c181975a0b357f9ef73e27983fc");
+  assert.equal(settings.WORKSPACE_DIR, fixture("HelloXcode/HelloXcode.xcodeproj"));
+  assert.equal(settings._WRAPPER_CONTENTS_DIR_SHALLOW_BUNDLE_NO, "/Contents");
+  assert.equal(settings._WRAPPER_PARENT_PATH_SHALLOW_BUNDLE_NO, "/..");
+  assert.equal(settings._WRAPPER_RESOURCES_DIR_SHALLOW_BUNDLE_NO, "/Resources");
+  assert.equal(settings.PROVISIONING_PROFILE_REQUIRED, "NO");
+  assert.equal(settings.PROVISIONING_PROFILE_SUPPORTED, "YES");
   assert.equal(settings.ARCHS, "arm64 x86_64");
   assert.equal(settings.ARCHS_STANDARD_32_64_BIT, "arm64 x86_64");
   assert.equal(settings.ARCHS_UNIVERSAL_IPHONE_OS, "arm64 x86_64");
@@ -204,6 +210,30 @@ test("HelloXcode Debug simulator settings", () => {
   assert.equal(settings.PRODUCT_BUNDLE_IDENTIFIER, "com.example.HelloXcode");
   assert.equal(settings.GCC_PREPROCESSOR_DEFINITIONS, "DEBUG=1 ");
   assert.equal(settings.EFFECTIVE_PLATFORM_NAME, "-iphonesimulator");
+});
+
+test("explicit workspace builds use the workspace container, not the first project", () => {
+  const project = loadProject(fixture("HelloXcode/HelloXcode.xcodeproj"));
+  const target = project.targetByName("HelloXcode");
+  const workspacePath = "/tmp/MultipleApps.xcworkspace";
+  const { settings } = resolveBuildSettings({
+    project, workspacePath, target,
+    configuration: "Debug", platform: "iphonesimulator",
+    sdk: { name: "iphonesimulator27.1", version: "27.1",
+      path: "/SDK/iPhoneSimulator27.1.sdk", root: "iphonesimulator",
+      defaultProperties: {} },
+    arch: "arm64", hostArch: "arm64", derivedDataPath: "/tmp/WorkspaceDerived",
+    developerDir: "/Developer",
+  });
+  assert.equal(settings.PROJECT_FILE_PATH, project.path);
+  assert.equal(settings.WORKSPACE_DIR, workspacePath);
+  const overridden = resolveBuildSettings({
+    project, workspacePath, target, configuration: "Debug",
+    platform: "iphonesimulator", arch: "arm64",
+    derivedDataPath: "/tmp/WorkspaceDerived", developerDir: "/Developer",
+    overrides: { WORKSPACE_DIR: "/tmp/Override.xcworkspace" },
+  });
+  assert.equal(overridden.settings.WORKSPACE_DIR, "/tmp/Override.xcworkspace");
 });
 
 test("Xcode 27.1 simulator settings are derived from context, not fixture paths", () => {
