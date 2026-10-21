@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { hostAccountSettings, hostXcodeCacheSettings } from "../src/settings/host.js";
+import { hostAccountSettings, hostXcodeCacheSettings, hostMacOSVersionSettings } from "../src/settings/host.js";
 
 test("host account settings use discovered owner and group, not fixed identities", () => {
   const result = hostAccountSettings({
@@ -71,4 +71,47 @@ test("Xcode cache settings remain absent without valid host evidence", () => {
     platform: "darwin", version: "27.1", build: "27A9275",
     run: () => "/unexpected/location\n",
   }), {});
+});
+
+test("host macOS version settings encode product and build versions from sw_vers", () => {
+  const data = hostMacOSVersionSettings({
+    platform: "darwin",
+    run(command, args) {
+      assert.equal(command, "sw_vers");
+      return args[0] === "-productVersion" ? "27.0.1\n" : "26A123\n";
+    },
+  });
+  assert.deepEqual(data, {
+    MAC_OS_X_VERSION_ACTUAL: "270001",
+    MAC_OS_X_VERSION_MAJOR: "270000",
+    MAC_OS_X_VERSION_MINOR: "0001",
+    MAC_OS_X_PRODUCT_BUILD_VERSION: "26A123",
+  });
+  const historical = hostMacOSVersionSettings({
+    platform: "darwin",
+    run(command, args) {
+      return args[0] === "-productVersion" ? "10.12.6" : "16G29";
+    },
+  });
+  assert.equal(historical.MAC_OS_X_VERSION_ACTUAL, "101206");
+  assert.equal(historical.MAC_OS_X_VERSION_MAJOR, "101200");
+  assert.equal(historical.MAC_OS_X_VERSION_MINOR, "1206");
+});
+
+test("host OS metadata is absent or bounded when sw_vers is unavailable", () => {
+  assert.deepEqual(hostMacOSVersionSettings({ platform: "linux" }), {});
+  assert.deepEqual(hostMacOSVersionSettings({
+    platform: "darwin", run: () => { throw new Error("sw_vers unavailable"); },
+  }), {});
+  assert.deepEqual(hostMacOSVersionSettings({
+    platform: "darwin", run: () => "invalid-string",
+  }), {});
+  const noBuild = hostMacOSVersionSettings({
+    platform: "darwin", run(command, args) {
+      if (args[0] === "-buildVersion") throw new Error("missing build version");
+      return "15.4";
+    },
+  });
+  assert.equal(noBuild.MAC_OS_X_VERSION_ACTUAL, "150400");
+  assert.equal(noBuild.MAC_OS_X_PRODUCT_BUILD_VERSION, undefined);
 });
