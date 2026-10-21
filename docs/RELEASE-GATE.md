@@ -109,22 +109,22 @@ Not automated, because it depends on what the app does:
 
 ## What these gates do not prove
 
-- On macOS / Xcode 27.1, the HelloXcode fixture **passed 121
+- On macOS / Xcode 27.1, the HelloXcode fixture **passed 124
   regression tests**, compiled and packaged the real simulator app, passed
   code-signing/arm64 verification, and matched project structure. The last
-  completed hardware settings gate still failed: **1 differing value and
-  111 missing occurrences across two targets**. The sole value difference
-  is XCTest's SYSTEM_FRAMEWORK_SEARCH_PATHS.
-- Subsequent repairs use distinct installed platform and SDK XCTest framework
-  paths; derive USER_APPS_DIR, USER_LIBRARY_DIR, system-extension bundle layouts,
-  Xcode legacy/app-support paths, Apple Silicon architecture aliases and the
-  target/architecture-specific linker, Swift response and const-metadata lists
-  documented in real Xcode exports. The certifier now preserves only approved
-  Apple SDK path components for the remaining path diagnosis and prints
-  selected non-sensitive missing reference values; complete evidence stays
-  local. The expanded **124/124 Node regressions pass in isolated validation**,
-  but these changes have NOT been measured on macOS. Strict comparison
-  remains mandatory; no private Xcode state is fabricated or excluded.
+  completed hardware settings gate still failed: **zero value mismatches and
+  80 missing settings** across two targets (41 app, 39 XCTest). This is
+  authentic Mac evidence; zero value differences alone is not full parity.
+- Subsequently implemented architecture-set aliases, effective ONLY_ARCH and
+  recommended iOS deployment settings, RPATH_ORIGIN, non-sensitive platform/
+  compiler policy flags and application Debug dylib setting. Cross-platform
+  deployment defaults measured in this Xcode 27.1 report are **explicitly
+  version-scoped** rather than applied to other Xcode versions. The expanded
+  **126/126 Node regressions pass in isolated validation**, but their effect
+  has NOT been measured on macOS. Unverified provisioning, process PATH, cache
+  stat files, opaque Swift protocol lists and Xcode build-system internals
+  remain missing rather than fabricated, ignored or copied from reference
+  output. The strict settings gate remains the release blocker.
 - Missing settings now include their Xcode reference values in the detailed
   JSON report. The complete artifact can contain local paths and identities;
   review it before sharing or committing.
