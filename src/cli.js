@@ -153,6 +153,12 @@ function listCommand(parsed) {
 function showBuildSettingsCommand(parsed) {
   const context = loadProjects(parsed);
   const environment = buildEnvironment(parsed, context, { action: "build" });
+  // -showBuildSettings is a configuration query, not an active compiler task.
+  // Xcode reports CURRENT_ARCH=undefined_arch unless -arch selects an active
+  // architecture. Keep the actual build planner's architecture unchanged.
+  if (!parsed.get("arch")) {
+    environment.overrides.CURRENT_ARCH = "undefined_arch";
+  }
   const resolver = makeSettingsResolver(environment);
   const rows = [];
   const explicitSelection =
