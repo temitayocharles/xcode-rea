@@ -143,7 +143,21 @@ test("HelloXcode Debug simulator settings", () => {
   assert.equal(settings.PROJECT, fixtureProject.name);
   assert.equal(settings.PROJECT_GUID, "4a043c181975a0b357f9ef73e27983fc");
   assert.equal(settings.ARCHS, "arm64 x86_64");
+  assert.equal(settings.ARCHS_STANDARD_32_64_BIT, "arm64 x86_64");
+  assert.equal(settings.ARCHS_UNIVERSAL_IPHONE_OS, "arm64 x86_64");
+  assert.equal(settings.ONLY_ARCH, "multiple_archs");
   assert.equal(settings.ONLY_ACTIVE_ARCH, "YES");
+  assert.equal(settings.RPATH_ORIGIN, "@loader_path");
+  assert.equal(settings.RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET, "17.0");
+  assert.equal(settings.PLATFORM_REQUIRES_SWIFT_AUTOLINK_EXTRACT, "NO");
+  assert.equal(settings.PLATFORM_REQUIRES_SWIFT_MODULEWRAP, "NO");
+  assert.equal(settings.PLATFORM_USES_DSYMS, "YES");
+  assert.equal(settings.COMPILATION_CACHE_KEEP_CAS_DIRECTORY, "YES");
+  assert.equal(settings.SCANNING_PCM_KEEP_CACHE_DIRECTORY, "YES");
+  assert.equal(settings.VALIDATE_DEVELOPMENT_ASSET_PATHS, "YES_ERROR");
+  assert.equal(settings.SKIP_COPYING_TEST_FRAMEWORKS, "YES");
+  assert.equal(settings.DIAGNOSE_MISSING_TARGET_DEPENDENCIES, "YES");
+  assert.equal(settings.ENABLE_DEBUG_DYLIB, "YES");
   assert.equal(settings.SWIFT_OPTIMIZATION_LEVEL, "-Onone");
   assert.equal(settings.IS_UNOPTIMIZED_BUILD, "YES");
   assert.equal(settings.ENABLE_TESTABILITY, "YES");
@@ -351,6 +365,26 @@ test("ONLY_ACTIVE_ARCH affects effective compile arch without reducing ARCHS in 
     overrides: { ARCHS: "arm64" },
   });
   assert.equal(overridden.settings.ARCHS, "arm64");
+  assert.equal(overridden.settings.ONLY_ARCH, "arm64");
+});
+
+test("missing-reference defaults remain subordinate to explicit user settings", () => {
+  const { settings } = settingsFor({
+    projectPath: fixture("HelloXcode/HelloXcode.xcodeproj"),
+    targetName: "HelloXcode",
+    overrides: {
+      RPATH_ORIGIN: "@executable_path",
+      ONLY_ARCH: "custom_architecture",
+      SKIP_COPYING_TEST_FRAMEWORKS: "NO",
+      PLATFORM_USES_DSYMS: "NO",
+      RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET: "19.0",
+    },
+  });
+  assert.equal(settings.RPATH_ORIGIN, "@executable_path");
+  assert.equal(settings.ONLY_ARCH, "custom_architecture");
+  assert.equal(settings.SKIP_COPYING_TEST_FRAMEWORKS, "NO");
+  assert.equal(settings.PLATFORM_USES_DSYMS, "NO");
+  assert.equal(settings.RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET, "19.0");
 });
 
 test("explicit user settings still supersede restored contextual defaults", () => {
