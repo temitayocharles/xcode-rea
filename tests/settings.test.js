@@ -105,7 +105,7 @@ test("Xcode 27.1 simulator settings are derived from context, not fixture paths"
   assert.equal(settings.INFOSTRINGS_PATH, "HelloXcode.app/en.lproj/InfoPlist.strings");
   assert.equal(settings.ENTITLEMENTS_REQUIRED, "NO");
   assert.equal(settings.SDK_NAMES, "iphonesimulator18.0");
-  assert.equal(settings.EFFECTIVE_SWIFT_VERSION, "5.0");
+  assert.equal(settings.EFFECTIVE_SWIFT_VERSION, "5");
   assert.equal(settings.DT_TOOLCHAIN_DIR, settings.TOOLCHAIN_DIR);
   assert.equal(settings.DEVELOPER_FRAMEWORKS_DIR_QUOTED, settings.DEVELOPER_FRAMEWORKS_DIR);
   assert.equal(settings.PKGINFO_FILE_PATH,
@@ -121,8 +121,11 @@ test("Xcode 27.1 simulator settings are derived from context, not fixture paths"
   assert.equal(settings.SYSTEM_DEVELOPER_APPS_DIR, settings.DEVELOPER_APPLICATIONS_DIR);
   assert.equal(settings.SYSTEM_DEVELOPER_BIN_DIR, settings.DEVELOPER_BIN_DIR);
   assert.equal(settings.SYSTEM_DEVELOPER_TOOLS, settings.DEVELOPER_TOOLS_DIR);
-  assert.equal(settings.PRODUCT_SETTINGS_PATH,
-    settings.TARGET_BUILD_DIR + "/HelloXcode.app/Info.plist");
+  assert.equal(settings.PRODUCT_SETTINGS_PATH, "");
+  assert.equal(settings.SWIFT_ENABLE_EXPLICIT_MODULES, "YES");
+  assert.equal(settings._SWIFT_EXPLICIT_MODULES_ALLOW_CXX_INTEROP, "YES");
+  assert.equal(settings.CLANG_CACHE_FINE_GRAINED_OUTPUTS, "YES");
+  assert.equal(settings.LD_RUNPATH_SEARCH_PATHS, " @executable_path/Frameworks");
   assert.equal(settings.HOST_PLATFORM, "macosx");
   assert.equal(settings.DYNAMIC_LIBRARY_EXTENSION, "dylib");
   assert.equal(settings.arch, "arm64");
@@ -158,7 +161,9 @@ test("hosted XCTest output inherits its host application's PlugIns directory", (
   assert.equal(settings.ENABLE_TESTING_SEARCH_PATHS, "YES");
   assert.equal(settings.WRAPPER_SUFFIX, ".xctest");
   assert.equal(settings.LD_RUNPATH_SEARCH_PATHS,
-    "@loader_path/Frameworks @executable_path/Frameworks");
+    " @loader_path/Frameworks @executable_path/Frameworks");
+  assert.equal(settings.INSTALL_DIR, "/tmp/HelloXcode.dst");
+  assert.equal(settings.STRIP_STYLE, "non-global");
 });
 
 test("context-derived settings cannot be erased by unscoped Xcode spec defaults", () => {
