@@ -1,4 +1,5 @@
 import { homedir } from "node:os";
+import { readPlistFile } from "../plist/index.js";
 import { basename, dirname, join } from "node:path";
 import { sha256 } from "../util/text.js";
 import { productTypeInfo } from "./productTypes.js";
@@ -185,6 +186,34 @@ function bundleLayoutDefaults(platform, productInfo) {
   return { ...layout, ...ancillary };
 }
 
+/**
+ * Platform bundles publish machine-installed DefaultProperties in Info.plist.
+ * Respect their conditional setting keys; the regular resolver applies them
+ * with the same conditional-precedence rules as project xcconfigs.
+ *
+ * Version metadata is only emitted when Xcode itself actually supplies a
+ * ProductBuildVersion; CFBundleVersion is a different concept.
+ */
+export function installedPlatformProperties(developerDir, platform) {
+  const name = PLATFORM_DIR_NAME[platform];
+  if (!developerDir || !name) return {};
+  const root = join(developerDir, "Platforms", `${name}.platform`);
+  let info = {};
+  try { info = readPlistFile(join(root, "Info.plist")); } catch { /* absent on CLT */ }
+  let version = {};
+  try { version = readPlistFile(join(root, "version.plist")); } catch { /* optional */ }
+  const properties = info.DefaultProperties;
+  const defaults = properties && typeof properties === "object" && !Array.isArray(properties)
+    ? Object.fromEntries(Object.entries(properties).filter(([key, value]) =>
+        typeof key === "string" && ["string", "number", "boolean"].includes(typeof value)))
+    : {};
+  const buildVersion = version.ProductBuildVersion ?? info.ProductBuildVersion;
+  if (typeof buildVersion === "string" && buildVersion) {
+    defaults.PLATFORM_PRODUCT_BUILD_VERSION = buildVersion;
+  }
+  return defaults;
+}
+
 export function platformDefaults(context) {
   const { platform, sdk, hostArch, sdkDir, developerDir } = context;
   const sdkRoot = SDKROOT_NAME[platform] ?? platform;
@@ -199,6 +228,10 @@ export function platformDefaults(context) {
   const [displayName, familyName, preferredArch] = PLATFORM_LABELS[platform] ?? [platform, platform, null];
 
   const defaults = {
+    // The installed platform provides additional conditional values that a
+    // generic toolchain cannot predict. SDK/active-context values below are
+    // authoritative over these baseline declarations.
+    ...installedPlatformProperties(developerDir, platform),
     SDKROOT: sdk?.path ?? sdkRoot,
     PLATFORM_NAME: platform,
     PLATFORM_DISPLAY_NAME: displayName,
@@ -234,8 +267,9 @@ export function platformDefaults(context) {
       defaults[`SDK_DIR_${platform}`] = sdk.path;
       if (sdk.version) defaults[`SDK_DIR_${platform}${String(sdk.version).replace(/\./g, "_")}`] = sdk.path;
     }
-    if (sdk.settings?.ProductBuildVersion) {
-      defaults.SDK_PRODUCT_BUILD_VERSION = String(sdk.settings.ProductBuildVersion);
+    const sdkBuild = sdk.productBuildVersion ?? sdk.settings?.ProductBuildVersion;
+    if (typeof sdkBuild === "string" && sdkBuild) {
+      defaults.SDK_PRODUCT_BUILD_VERSION = sdkBuild;
     }
   } else {
     defaults.SDK_NAME = sdkRoot;
