@@ -104,6 +104,18 @@ test("Xcode 27.1 simulator settings are derived from context, not fixture paths"
   assert.equal(settings.DOCUMENTATION_FOLDER_PATH, "HelloXcode.app/en.lproj/Documentation");
   assert.equal(settings.INFOSTRINGS_PATH, "HelloXcode.app/en.lproj/InfoPlist.strings");
   assert.equal(settings.ENTITLEMENTS_REQUIRED, "NO");
+  assert.equal(settings.SDK_NAMES, "iphonesimulator18.0");
+  assert.equal(settings.EFFECTIVE_SWIFT_VERSION, "5.0");
+  assert.equal(settings.DT_TOOLCHAIN_DIR, settings.TOOLCHAIN_DIR);
+  assert.equal(settings.DEVELOPER_FRAMEWORKS_DIR_QUOTED, '"'+settings.DEVELOPER_FRAMEWORKS_DIR+'"');
+  assert.equal(settings.PKGINFO_FILE_PATH,
+    settings.TARGET_BUILD_DIR + "/HelloXcode.app/PkgInfo");
+  assert.equal(settings.PRODUCT_SETTINGS_PATH,
+    settings.TARGET_BUILD_DIR + "/HelloXcode.app/Info.plist");
+  assert.equal(settings.HOST_PLATFORM, "macosx");
+  assert.equal(settings.DYNAMIC_LIBRARY_EXTENSION, "dylib");
+  assert.equal(settings.arch, "arm64");
+  assert.equal(settings.variant, "normal");
   assert.equal(settings.SWIFTC_PASS_SYSROOT, "NO");
   assert.equal(settings.LLVM_TARGET_TRIPLE_OS_VERSION, "ios17.0");
   assert.equal(settings.PACKAGE_TYPE, "com.apple.package-type.wrapper.application");
