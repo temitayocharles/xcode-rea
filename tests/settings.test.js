@@ -345,6 +345,37 @@ test("hosted XCTest output inherits its host application's PlugIns directory", (
     " -plugin-path " + settings.TOOLCHAIN_DIR + "/usr/lib/swift/host/plugins/testing");
 });
 
+test("measured XCTest signing conditionals are resolved after SDK defaults", () => {
+  const projectPath = fixture("HelloXcode/HelloXcode.xcodeproj");
+  const options = {
+    projectPath, targetName: "HelloXcodeTests", xcodeVersion: "27.1",
+    sdk: {
+      path: "/SDK/iphonesimulator27.1.sdk", name: "iphonesimulator27.1",
+      version: "27.1", root: "iphonesimulator",
+      defaultProperties: {
+        ENTITLEMENTS_ALLOWED: "NO",
+        PROVISIONING_PROFILE_REQUIRED_YES_YES: "YES",
+      },
+    },
+  };
+  const { settings } = settingsFor(options);
+  assert.equal(settings.ENTITLEMENTS_ALLOWED, "NO");
+  assert.equal(settings.PROVISIONING_PROFILE_REQUIRED_YES_YES, "YES");
+  const overridden = settingsFor({
+    ...options,
+    overrides: {
+      ENTITLEMENTS_ALLOWED: "CUSTOM",
+      PROVISIONING_PROFILE_REQUIRED_YES_YES: "CUSTOM",
+    },
+  }).settings;
+  assert.equal(overridden.ENTITLEMENTS_ALLOWED, "CUSTOM");
+  assert.equal(overridden.PROVISIONING_PROFILE_REQUIRED_YES_YES, "CUSTOM");
+  const app = settingsFor({ ...options, targetName: "HelloXcode" }).settings;
+  assert.equal(app.PROVISIONING_PROFILE_REQUIRED_YES_YES, undefined);
+  const older = settingsFor({ ...options, xcodeVersion: "26.4" }).settings;
+  assert.equal(older.PROVISIONING_PROFILE_REQUIRED_YES_YES, undefined);
+});
+
 test("XCTest defaults remain subordinate to explicit build-setting overrides", () => {
   const project = loadProject(fixture("HelloXcode/HelloXcode.xcodeproj"));
   const target = project.targetByName("HelloXcodeTests");
