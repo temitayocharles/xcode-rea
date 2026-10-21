@@ -379,6 +379,29 @@ test("Xcode 27.1 conditional linker selectors are product scoped", () => {
   assert.equal(previous.PRODUCT_SPECIFIC_LDFLAGS, undefined);
 });
 
+test("compilation CAS location follows selected DerivedData, not the checkout or HOME", () => {
+  const projectPath = fixture("HelloXcode/HelloXcode.xcodeproj");
+  const selectedRoot = "/tmp/build-cache-session-2026";
+  const project = loadProject(projectPath);
+  const target = project.targetByName("HelloXcode");
+  const resolved = resolveBuildSettings({
+    project, target, configuration: "Debug", platform: "iphonesimulator",
+    derivedDataPath: selectedRoot, developerDir: "/Developer",
+    arch: "arm64",
+  }).settings;
+  assert.equal(resolved.COMPILATION_CACHE_CAS_PATH,
+    selectedRoot + "/CompilationCache.noindex");
+  assert.notEqual(resolved.COMPILATION_CACHE_CAS_PATH,
+    resolved.CACHE_ROOT + "/CompilationCache.noindex");
+  const overridden = resolveBuildSettings({
+    project, target, configuration: "Debug", platform: "iphonesimulator",
+    derivedDataPath: selectedRoot, developerDir: "/Developer",
+    arch: "arm64",
+    overrides: { COMPILATION_CACHE_CAS_PATH: "/tmp/custom-cas" },
+  }).settings;
+  assert.equal(overridden.COMPILATION_CACHE_CAS_PATH, "/tmp/custom-cas");
+});
+
 test("Xcode 27.1 simulator signing conditionals belong to app, not XCTest", () => {
   const projectPath = fixture("HelloXcode/HelloXcode.xcodeproj");
   const base = {
