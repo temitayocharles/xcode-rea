@@ -383,19 +383,32 @@ export function platformDirectory(developerDir, platform) {
  * device SDK values when that platform/SDK is absent: Xcode's resolved output
  * depends on which optional platform components are actually installed.
  */
+// Observed xcodebuild 27.1 -showBuildSettings lists these virtual toolchain
+// platforms even without matching physical .platform directories. This is
+// separate from the list of actually installed SDKs.
+const XCODE_27_VIRTUAL_PLATFORMS = [
+  "android", "freebsd", "linux", "none", "openbsd", "qnx",
+  "staticlinux", "webassembly",
+];
+
 export function installedPlatformEnvironment({
   developerDir,
   platform,
   sdk = null,
+  xcodeVersion = null,
   hostPlatform = process.platform,
   runXcrun = execFileSync,
 } = {}) {
   if (!developerDir || !platform) return {};
   const platforms = listPlatforms(developerDir);
   if (platforms.length === 0) return {};
+  const includesXcode27Virtuals = /^27(?:\.|$)/.test(String(xcodeVersion ?? "")) &&
+    /(?:\/Contents\/Developer)$/.test(developerDir);
   const result = {
-    AVAILABLE_PLATFORMS: [...new Set(platforms.map((p) => p.identifier))]
-      .sort().join(" "),
+    AVAILABLE_PLATFORMS: [...new Set([
+      ...platforms.map((p) => p.identifier),
+      ...(includesXcode27Virtuals ? XCODE_27_VIRTUAL_PLATFORMS : []),
+    ])].sort().join(" "),
   };
   if (sdk?.path) result.SYSROOT = sdk.path;
 
