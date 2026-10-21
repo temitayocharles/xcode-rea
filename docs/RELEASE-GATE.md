@@ -109,21 +109,22 @@ Not automated, because it depends on what the app does:
 
 ## What these gates do not prove
 
-- On macOS / Xcode 27.1, the HelloXcode fixture **passed 119
+- On macOS / Xcode 27.1, the HelloXcode fixture **passed 121
   regression tests**, compiled and packaged the real simulator app, passed
   code-signing/arm64 verification, and matched project structure. The last
-  completed hardware settings gate still failed: **3 differing values and
-  153 missing occurrences across two targets** (PROJECT_GUID x2 and
-  SYSTEM_FRAMEWORK_SEARCH_PATHS x1).
-- Subsequent repairs derive PROJECT_GUID using MD5 of the .xcodeproj bundle
-  name, implement more documented developer and shallow/deep-bundle path
-  defaults, and derive optimization state from the actual target configuration.
-  The Xcode value-redactor now preserves public device/simulator platform
-  identifiers so masked framework paths can be disambiguated without
-  revealing private directory prefixes. The expanded **121/121 Node
-  regressions pass** in isolated validation. These changes have NOT yet been
-  measured by Xcode on macOS. Strict parity remains mandatory, including the
-  153 missing values; no Xcode-private settings are fabricated or suppressed.
+  completed hardware settings gate still failed: **1 differing value and
+  111 missing occurrences across two targets**. The sole value difference
+  is XCTest's SYSTEM_FRAMEWORK_SEARCH_PATHS.
+- Subsequent repairs use distinct installed platform and SDK XCTest framework
+  paths; derive USER_APPS_DIR, USER_LIBRARY_DIR, system-extension bundle layouts,
+  Xcode legacy/app-support paths, Apple Silicon architecture aliases and the
+  target/architecture-specific linker, Swift response and const-metadata lists
+  documented in real Xcode exports. The certifier now preserves only approved
+  Apple SDK path components for the remaining path diagnosis and prints
+  selected non-sensitive missing reference values; complete evidence stays
+  local. The expanded **124/124 Node regressions pass in isolated validation**,
+  but these changes have NOT been measured on macOS. Strict comparison
+  remains mandatory; no private Xcode state is fabricated or excluded.
 - Missing settings now include their Xcode reference values in the detailed
   JSON report. The complete artifact can contain local paths and identities;
   review it before sharing or committing.
