@@ -145,3 +145,18 @@ test("remaining product linker selectors show reference values with path masking
   assert.doesNotMatch(output, /Users\/private|\/Users\/private\/bin/);
   assert.doesNotMatch(output, /HelloXcode.PATH/);
 });
+
+test("runtime cache directory and generated entry classifications hide local names", () => {
+  const paths = [
+    ["/Users/sensitive/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex",
+      "<cache-root>/SDKStatCaches.noindex"],
+    ["/Users/sensitive/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/opaque-cache-record",
+      "<cache-root>/SDKStatCaches.noindex/<opaque-entry>"],
+    ["/Users/sensitive/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/Secret.build/Debug-iphonesimulator/Test.build/DerivedSources/TestEntry.swift",
+      "<derived-data>/Build/Intermediates.noindex/<project>/<configuration>/<target>/DerivedSources/<generated-entry>"],
+  ];
+  for (const [absolute, expected] of paths) {
+    assert.equal(redactedXcodeCachePathKind(absolute), expected);
+    assert.doesNotMatch(redactedXcodeCachePathKind(absolute), /sensitive|Secret|TestEntry/);
+  }
+});
