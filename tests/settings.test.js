@@ -110,6 +110,10 @@ test("Xcode 27.1 simulator settings are derived from context, not fixture paths"
   assert.equal(settings.WRAPPER_SUFFIX, ".app");
   assert.equal(settings.GCC_VERSION, "com.apple.compilers.llvm.clang.1_0");
   assert.equal(settings.INFOPLIST_OUTPUT_FORMAT, "binary");
+  assert.equal(settings.GCC_WARN_64_TO_32_BIT_CONVERSION, "NO");
+  assert.equal(settings.ENABLE_ON_DEMAND_RESOURCES, "YES");
+  assert.equal(settings.GENERATE_PKGINFO_FILE, "YES");
+  assert.equal(settings.SUPPORTS_MACCATALYST, "NO");
   assert.equal(settings.LIBRARY_FLAG_PREFIX, "-l");
   assert.equal(settings.GENERATED_MODULEMAP_DIR,
     "/tmp/DerivedData/Build/Intermediates.noindex/GeneratedModuleMaps-iphonesimulator");
@@ -128,6 +132,7 @@ test("hosted XCTest output inherits its host application's PlugIns directory", (
   assert.equal(settings.DWARF_DSYM_FOLDER_PATH, plugins);
   assert.equal(settings.CODESIGNING_FOLDER_PATH, plugins + "/HelloXcodeTests.xctest");
   assert.equal(settings.PACKAGE_TYPE, "com.apple.package-type.bundle.unit-test");
+  assert.equal(settings.ENABLE_TESTING_SEARCH_PATHS, "YES");
   assert.equal(settings.WRAPPER_SUFFIX, ".xctest");
   assert.equal(settings.LD_RUNPATH_SEARCH_PATHS,
     "@loader_path/Frameworks @executable_path/Frameworks");
