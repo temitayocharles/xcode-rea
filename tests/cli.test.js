@@ -60,6 +60,16 @@ test("xcl -showBuildSettings --json resolves settings", () => {
   assert.equal(output[0].buildSettings.SWIFT_OPTIMIZATION_LEVEL, "-Onone");
 });
 
+test("settings query reports undefined active architecture without -arch", () => {
+  const rows = JSON.parse(run([
+    "-project", hello, "-target", "HelloXcode",
+    "-configuration", "Debug", "-sdk", "iphonesimulator",
+    "-showBuildSettings", "--json",
+  ]));
+  assert.equal(rows[0].buildSettings.CURRENT_ARCH, "undefined_arch");
+  assert.equal(rows[0].buildSettings.ARCHS, "arm64 x86_64");
+});
+
 test("xcl build --dry-run prints a real plan without executing", () => {
   const output = run([
     "-project",
