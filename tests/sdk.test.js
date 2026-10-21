@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { listSdks, resolveSdk, sdkDisplayName } from "../src/settings/toolchain.js";
@@ -34,4 +34,23 @@ test("SDK discovery reads installed SDK settings and normalizes versioned names"
   assert.equal(sdk.defaultProperties.IPHONEOS_DEPLOYMENT_TARGET, "17.0");
   assert.equal(listSdks({ developerDir: directory, platform: "iphonesimulator" })[0].name,
     "iphonesimulator27.1");
+});
+
+test("SDK alias paths resolve to the concrete installed version", (t) => {
+  const directory = mkdtempSync(join(tmpdir(), "xcl-sdk-alias-"));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const root = join(directory, "Platforms", "iPhoneSimulator.platform", "Developer", "SDKs");
+  const canonical = join(root, "iPhoneSimulator27.1.sdk");
+  const alias = join(root, "iPhoneSimulator.sdk");
+  mkdirSync(canonical, { recursive: true });
+  symlinkSync(canonical, alias);
+  writeFileSync(join(canonical, "SDKSettings.plist"), `<?xml version="1.0"?>
+    <plist version="1.0"><dict><key>CanonicalName</key><string>iphonesimulator27.1</string>
+    <key>Version</key><string>27.1</string></dict></plist>`);
+  const sdk = resolveSdk({ developerDir: directory, platform: "iphonesimulator",
+    requested: "iphonesimulator" });
+  assert.equal(sdk.path, canonical);
+  const explicit = resolveSdk({ developerDir: directory, platform: "iphonesimulator",
+    requested: alias });
+  assert.equal(explicit.path, canonical);
 });
