@@ -323,6 +323,14 @@ test("hosted XCTest output inherits its host application's PlugIns directory", (
     " @loader_path/Frameworks @executable_path/Frameworks");
   assert.equal(settings.INSTALL_DIR, "/tmp/HelloXcode.dst");
   assert.equal(settings.STRIP_STYLE, "non-global");
+  // Xcode 27.1 observed XCTest simulator signing conditions.
+  const observed = settingsFor({
+    projectPath: fixture("HelloXcode/HelloXcode.xcodeproj"),
+    targetName: "HelloXcodeTests",
+    xcodeVersion: "27.1",
+  }).settings;
+  assert.equal(observed.ENTITLEMENTS_ALLOWED, "NO");
+  assert.equal(observed.PROVISIONING_PROFILE_REQUIRED_YES_YES, "YES");
   assert.equal(settings.LIBRARY_SEARCH_PATHS,
     settings.BUILT_PRODUCTS_DIR + "   " + settings.PLATFORM_DEVELOPER_USR_DIR + "/lib");
   assert.equal(settings.SWIFT_SYSTEM_INCLUDE_PATHS,
