@@ -81,7 +81,7 @@ export function compareSettings(reference, actual, options = {}) {
       compared += 1;
       if (!(key in received)) {
         unimplemented += 1;
-        differences.push({ target, key, kind: "missing" });
+        differences.push({ target, key, kind: "missing", xcodebuild: String(value) });
         if (unimplemented <= limit) lines.push(`${target}: missing setting ${key}`);
         continue;
       }
