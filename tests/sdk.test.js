@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { listSdks, resolveSdk, sdkDisplayName, sdkBuildVersion } from "../src/settings/toolchain.js";
+import { listSdks, resolveSdk, sdkDisplayName, sdkBuildVersion, xcrunSelectedSdkPath } from "../src/settings/toolchain.js";
 
 test("SDK canonical names with embedded version are not double-suffixed", () => {
   assert.equal(sdkDisplayName("iphonesimulator27.1", "27.1"), "iphonesimulator27.1");
@@ -116,4 +116,52 @@ test("SDK build version is read from the installed system image, not invented", 
   assert.equal(resolved.productBuildVersion, "24B123");
   assert.equal(sdkBuildVersion(sdk, { ProductBuildVersion: "override-product" }), "override-product");
   assert.equal(sdkBuildVersion(sdk, null), "24B123");
+});
+
+test("on macOS symbolic SDK selects the exact directory spelling returned by xcrun", (t) => {
+  const directory = mkdtempSync(join(tmpdir(), "xcl-sdk-xcrun-"));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const root = join(directory, "Platforms", "iPhoneSimulator.platform", "Developer", "SDKs");
+  const versioned = join(root, "iPhoneSimulator27.1.sdk");
+  const alias = join(root, "iPhoneSimulator.sdk");
+  mkdirSync(versioned, { recursive: true });
+  symlinkSync(versioned, alias);
+  writeFileSync(join(versioned, "SDKSettings.plist"), `<?xml version="1.0"?>
+    <plist version="1.0"><dict><key>CanonicalName</key><string>iphonesimulator</string>
+    <key>Version</key><string>27.1</string></dict></plist>`);
+  let invocations = 0;
+  const selected = resolveSdk({
+    developerDir: directory, platform: "iphonesimulator", requested: "iphonesimulator",
+    hostPlatform: "darwin",
+    runXcrun(cmd, args) {
+      invocations += 1;
+      assert.equal(cmd, "xcrun");
+      assert.deepEqual(args, ["--sdk", "iphonesimulator", "--show-sdk-path"]);
+      return alias + "\n";
+    },
+  });
+  assert.equal(invocations, 1);
+  assert.equal(selected.path, alias, "preserve Apple-selected path, not realpath alias");
+  assert.equal(selected.version, "27.1");
+  assert.equal(selected.name, "iphonesimulator27.1");
+});
+
+test("xcrun selection falls back safely if command unavailable or SDK mismatched", (t) => {
+  const directory = mkdtempSync(join(tmpdir(), "xcl-sdk-xcrun-fallback-"));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const root = join(directory, "Platforms", "iPhoneSimulator.platform", "Developer", "SDKs");
+  const versioned = join(root, "iPhoneSimulator27.1.sdk");
+  mkdirSync(versioned, { recursive: true });
+  writeFileSync(join(versioned, "SDKSettings.plist"), `<?xml version="1.0"?>
+    <plist version="1.0"><dict><key>CanonicalName</key><string>iphonesimulator</string>
+    <key>Version</key><string>27.1</string></dict></plist>`);
+  const sdk = resolveSdk({
+    developerDir: directory, platform: "iphonesimulator", hostPlatform: "darwin",
+    runXcrun: () => { throw new Error("tool not installed"); },
+  });
+  assert.equal(sdk.path, realpathSync(versioned));
+  assert.equal(xcrunSelectedSdkPath("iphonesimulator", {
+    hostPlatform: "linux",
+    run: () => { throw new Error("should not invoke xcrun"); },
+  }), null);
 });
