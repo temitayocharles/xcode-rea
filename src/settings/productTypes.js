@@ -15,6 +15,10 @@ export const PRODUCT_TYPES = Object.freeze({
       GENERATE_INFOPLIST_FILE: "NO",
       ASSETCATALOG_COMPILER_APPICON_NAME: "AppIcon",
       ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: "AccentColor",
+      // Default app product settings; an explicit target choice still wins.
+      ENABLE_ON_DEMAND_RESOURCES: "YES",
+      GENERATE_PKGINFO_FILE: "YES",
+      SUPPORTS_MACCATALYST: "NO",
     },
   },
   "com.apple.product-type.application.watchapp2": {
@@ -97,6 +101,7 @@ export const PRODUCT_TYPES = Object.freeze({
       BUNDLE_LOADER: "$(TEST_HOST)",
       TEST_HOST: "",
       WRAPPER_EXTENSION: "xctest",
+      ENABLE_TESTING_SEARCH_PATHS: "YES",
     },
   },
   "com.apple.product-type.bundle.ui-testing": {
