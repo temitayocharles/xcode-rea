@@ -314,7 +314,17 @@ export function expandSettings(rawSettings, options = {}) {
   };
 
   const expanded = {};
-  for (const key of Object.keys(values)) expanded[key] = normalizeValue(resolveKey(key));
+  // Xcode preserves literal spacing in these path-list settings, including
+  // the multiple separators contributed by XCTest's inherited defaults.
+  // Normalizing every setting loses meaningful Xcode output formatting.
+  const exactSpacing = new Set([
+    "LIBRARY_SEARCH_PATHS", "SWIFT_SYSTEM_INCLUDE_PATHS",
+    "SYSTEM_FRAMEWORK_SEARCH_PATHS",
+  ]);
+  for (const key of Object.keys(values)) {
+    const result = resolveKey(key);
+    expanded[key] = exactSpacing.has(key) ? result : normalizeValue(result);
+  }
   return { settings: expanded, missing };
 }
 
