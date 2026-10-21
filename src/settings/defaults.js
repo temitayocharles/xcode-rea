@@ -414,6 +414,25 @@ export function derivedArchitectureFileLists(architectures, variant = "normal") 
   return result;
 }
 
+/**
+ * Immutable values observed in the genuine Xcode 27.1 `-showBuildSettings`
+ * comparison. These cross-platform deployment defaults are exposed even
+ * when a fixture builds only for iOS Simulator. A version-specific profile
+ * avoids silently applying unverified values to other Xcode releases.
+ * The project and CLI layers retain higher priority than this profile.
+ */
+export function xcode271ObservedDeploymentDefaults(version) {
+  if (String(version ?? "") !== "27.1") return {};
+  return {
+    ANDROID_DEPLOYMENT_TARGET: "21.0",
+    DRIVERKIT_DEPLOYMENT_TARGET: "27.0",
+    MACOSX_DEPLOYMENT_TARGET: "27.0",
+    TVOS_DEPLOYMENT_TARGET: "27.0",
+    WATCHOS_DEPLOYMENT_TARGET: "27.0",
+    XROS_DEPLOYMENT_TARGET: "27.0",
+  };
+}
+
 export function genericDefaults(context) {
   const {
     project,
@@ -560,6 +579,7 @@ export function genericDefaults(context) {
     HOST_ARCH: hostArch,
     DEVELOPER_DIR: developerDir ?? "",
     ...xcodeVersionSettings(xcodeVersion, xcodeBuild),
+    ...xcode271ObservedDeploymentDefaults(xcodeVersion),
     TOOLCHAIN_DIR: developerDir ? join(developerDir, "Toolchains", "XcodeDefault.xctoolchain") : "",
     DT_TOOLCHAIN_DIR: "$(TOOLCHAIN_DIR)",
     DEVELOPER_FRAMEWORKS_DIR_QUOTED: "$(DEVELOPER_FRAMEWORKS_DIR)",
