@@ -123,3 +123,25 @@ test("dynamic Xcode path categories do not disclose users or SDK stat-cache dige
   assert.match(output, /SDK_STAT_CACHE_PATH = <derived-data>\/SDKStatCaches/);
   assert.doesNotMatch(output, /Users\/private|1234567890abcdef|\n  PATH =/);
 });
+
+test("remaining product linker selectors show reference values with path masking", () => {
+  const report = { gates: [{
+    name: "settings: resolved build settings",
+    differences: [
+      { kind: "missing", target: "HelloXcodeTests",
+        key: "LD_RUNPATH_SEARCH_PATHS_SHALLOW_BUNDLE_NO",
+        xcodebuild: "@loader_path/Frameworks" },
+      { kind: "missing", target: "HelloXcode",
+        key: "PRODUCT_SPECIFIC_LDFLAGS",
+        xcodebuild: "-L /Users/private/build/lib -framework XCTest" },
+      { kind: "missing", target: "HelloXcode", key: "PATH",
+        xcodebuild: "/Users/private/bin:/usr/bin" },
+    ],
+  }] };
+  const output = summarizeMissingReferenceValues(report);
+  assert.match(output, /HelloXcodeTests.LD_RUNPATH_SEARCH_PATHS_SHALLOW_BUNDLE_NO/);
+  assert.match(output, /HelloXcode.PRODUCT_SPECIFIC_LDFLAGS/);
+  assert.match(output, /-framework XCTest/);
+  assert.doesNotMatch(output, /Users\/private|\/Users\/private\/bin/);
+  assert.doesNotMatch(output, /HelloXcode.PATH/);
+});
