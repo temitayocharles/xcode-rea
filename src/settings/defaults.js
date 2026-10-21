@@ -586,17 +586,10 @@ export function genericDefaults(context) {
       : `/tmp/${project.name}.dst`,
     FRAMEWORK_SEARCH_PATHS: "$(BUILT_PRODUCTS_DIR) $(inherited)",
     HEADER_SEARCH_PATHS: "$(BUILT_PRODUCTS_DIR)/include $(inherited)",
-    // Hosted XCTest links against support libraries provided by the active
-    // platform, not against the host Mac's /usr/lib directory.
-    LIBRARY_SEARCH_PATHS: productInfo.kind === "unit-test"
-      ? "$(BUILT_PRODUCTS_DIR)   $(PLATFORM_DEVELOPER_USR_DIR)/lib"
-      : "$(BUILT_PRODUCTS_DIR) $(inherited)",
-    SWIFT_SYSTEM_INCLUDE_PATHS: productInfo.kind === "unit-test"
-      ? "  $(PLATFORM_DEVELOPER_USR_DIR)/lib" : "",
-    SYSTEM_FRAMEWORK_SEARCH_PATHS: productInfo.kind === "unit-test"
-      ? "  $(PLATFORM_DEVELOPER_LIBRARY_DIR)/Frameworks $(PLATFORM_DEVELOPER_LIBRARY_DIR)/Frameworks" : "",
-    PRODUCT_TYPE_SWIFT_STDLIB_TOOL_FLAGS: productInfo.kind === "unit-test"
-      ? "--scan-executable $(PLATFORM_DEVELOPER_USR_DIR)/lib/libXCTestSwiftSupport.dylib" : "",
+    LIBRARY_SEARCH_PATHS: "$(BUILT_PRODUCTS_DIR) $(inherited)",
+    SWIFT_SYSTEM_INCLUDE_PATHS: "",
+    SYSTEM_FRAMEWORK_SEARCH_PATHS: "",
+    PRODUCT_TYPE_SWIFT_STDLIB_TOOL_FLAGS: "",
     REZ_SEARCH_PATHS: "$(BUILT_PRODUCTS_DIR) $(inherited)",
     PATH_PREFIXES_EXCLUDED_FROM_HEADER_DEPENDENCIES: [
       "/usr/include", "/usr/local/include", "/System/Library/Frameworks",
@@ -662,9 +655,7 @@ export function genericDefaults(context) {
     ASSETCATALOG_COMPILER_APPICON_NAME: "",
     SWIFT_INCLUDE_PATHS: "$(inherited)",
     OTHER_LDFLAGS: "$(inherited)",
-    OTHER_SWIFT_FLAGS: productInfo.kind === "unit-test"
-      ? "$(inherited) -plugin-path $(TOOLCHAIN_DIR)/usr/lib/swift/host/plugins/testing"
-      : "$(inherited)",
+    OTHER_SWIFT_FLAGS: "$(inherited)",
     OTHER_CFLAGS: "$(inherited)",
     OTHER_CPLUSPLUSFLAGS: "$(inherited)",
     ...platformDefaults({
