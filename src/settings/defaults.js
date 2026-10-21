@@ -675,6 +675,16 @@ export function genericDefaults(context) {
       developerDir,
     }),
     ...bundleLayoutDefaults(platform, productInfo),
+    // XCTest product-level defaults must take precedence over generic SDK
+    // values; target/xcconfig/CLI overrides still win in the resolver.
+    ...(productInfo.kind === "unit-test" ? {
+      STRIP_STYLE: "non-global",
+      OTHER_SWIFT_FLAGS: "$(inherited) -plugin-path $(TOOLCHAIN_DIR)/usr/lib/swift/host/plugins/testing",
+      LIBRARY_SEARCH_PATHS: "$(BUILT_PRODUCTS_DIR)   $(PLATFORM_DEVELOPER_USR_DIR)/lib",
+      SWIFT_SYSTEM_INCLUDE_PATHS: "  $(PLATFORM_DEVELOPER_USR_DIR)/lib",
+      SYSTEM_FRAMEWORK_SEARCH_PATHS: "  $(PLATFORM_DEVELOPER_LIBRARY_DIR)/Frameworks $(PLATFORM_DEVELOPER_LIBRARY_DIR)/Frameworks",
+      PRODUCT_TYPE_SWIFT_STDLIB_TOOL_FLAGS: "--scan-executable $(PLATFORM_DEVELOPER_USR_DIR)/lib/libXCTestSwiftSupport.dylib",
+    } : {}),
     // Installed SDK DefaultProperties can contain empty spec placeholders.
     // The following flags are verified for Xcode 27.1 simulator settings.
     SWIFT_ENABLE_EXPLICIT_MODULES: "YES",
