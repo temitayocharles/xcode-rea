@@ -105,7 +105,7 @@ test("structured differences preserve all missing and mismatched keys beyond sum
   assert.equal(result.lines.length, 2);
   assert.deepEqual(result.differences, [
     { target: "App", key: "A", kind: "different", xcl: "wrong", xcodebuild: "1" },
-    { target: "App", key: "B", kind: "missing" },
+    { target: "App", key: "B", kind: "missing", xcodebuild: "2" },
   ]);
   assert.equal(result.differing, 1);
   assert.equal(result.unimplemented, 1);
