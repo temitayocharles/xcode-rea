@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { summarizeSettingsReport, summarizeValueDifferences, summarizeMissingReferenceValues, redactSettingValue, redactedXcodeCachePathKind } from "../src/compat/settings-summary.js";
+import { summarizeSettingsReport, summarizeValueDifferences, summarizeMissingReferenceValues, redactSettingValue, redactedXcodeCachePathKind, summarizeOpaqueMissingFields } from "../src/compat/settings-summary.js";
 
 test("settings summary groups all differences while redacting values and paths", () => {
   const report = {
@@ -159,4 +159,20 @@ test("runtime cache directory and generated entry classifications hide local nam
     assert.equal(redactedXcodeCachePathKind(absolute), expected);
     assert.doesNotMatch(redactedXcodeCachePathKind(absolute), /sensitive|Secret|TestEntry/);
   }
+});
+
+test("opaque missing-field evidence only prints public structural shapes", () => {
+  const report = { gates: [{ name: "settings: resolved build settings", differences: [
+    { kind: "missing", key: "__ARCHS__", xcodebuild: "arm64 x86_64" },
+    { kind: "missing", key: "AGGREGATE_TRACKED_DOMAINS", xcodebuild: "YES" },
+    { kind: "missing", key: "SDK_STAT_CACHE_DIR", xcodebuild: "/Users/private/Library/Developer/Xcode/DerivedData/secret" },
+    { kind: "missing", key: "_BUILDABLE_SERIALIZATION_KEY", xcodebuild: "SecretOpaqueKey2026" },
+    { kind: "missing", key: "GENERATED_TEST_ENTRY_POINT_PATH", xcodebuild: "/Users/private/DerivedSources/privateTester.swift" },
+    { kind: "missing", key: "SWIFT_EMIT_CONST_VALUE_PROTOCOLS", xcodebuild: "AppEntity AppIntent AppEnum" },
+  ] }] };
+  const output = summarizeOpaqueMissingFields(report);
+  assert.match(output, /architecture-list: arm64 x86_64/);
+  assert.match(output, /protocol-count=3, unique=3/);
+  assert.match(output, /public-components=Library\/Developer\/Xcode\/DerivedData/);
+  assert.doesNotMatch(output, /Users|private|SecretOpaqueKey2026|privateTester/);
 });
