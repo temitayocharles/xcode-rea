@@ -510,6 +510,14 @@ export function resolveBuildSettings(options) {
     const deploymentKey = deploymentTargetSetting(platform);
     finalSettings.DEPLOYMENT_TARGET = finalSettings[deploymentKey] ?? "";
   }
+  // Xcode 27.1 reports __ARCHS__ as the fully resolved architecture
+  // set for this iOS simulator configuration, not the single compile arch.
+  // Preserve any explicit SDK, project, xcconfig or CLI value.
+  if (platform === "iphonesimulator" &&
+      /^27\.1(?:\.|$)/.test(String(xcodeVersion ?? "")) &&
+      finalSettings.__ARCHS__ === undefined && finalSettings.ARCHS) {
+    finalSettings.__ARCHS__ = finalSettings.ARCHS;
+  }
   // Query-time architecture is separate from the full build architecture
   // set. Xcode reports "multiple_archs" when the latter contains >1 member.
   if (finalSettings.ONLY_ARCH === undefined) {
