@@ -471,6 +471,7 @@ export function genericDefaults(context) {
   // arch parameter determines the single-arch compile target.
   const archs = "$(ARCHS_STANDARD)";
   const configurationDefaults = templateConfigurationDefaults(configuration);
+  const hostCache = hostXcodeCacheSettings({ version: xcodeVersion, build: xcodeBuild });
 
   return {
     ACTION: context.action ?? "build",
@@ -663,9 +664,6 @@ export function genericDefaults(context) {
     CLANG_CACHE_FINE_GRAINED_OUTPUTS: "YES",
     DIAGNOSE_MISSING_TARGET_DEPENDENCIES: "YES",
     COMPILATION_CACHE_KEEP_CAS_DIRECTORY: "YES",
-    // Explicit -derivedDataPath selects the per-project CAS location.
-    // Keep the cache under the same build context, not a fixed user path.
-    COMPILATION_CACHE_CAS_PATH: join(derivedDataPath, "CompilationCache.noindex"),
     SCANNING_PCM_KEEP_CACHE_DIRECTORY: "YES",
     VALIDATE_DEVELOPMENT_ASSET_PATHS: "YES_ERROR",
     SKIP_COPYING_TEST_FRAMEWORKS: "YES",
@@ -841,7 +839,12 @@ export function genericDefaults(context) {
     } : {}),
     ...hostAccountSettings(),
     ...hostMacOSVersionSettings(),
-    ...hostXcodeCacheSettings({ version: xcodeVersion, build: xcodeBuild }),
+    ...hostCache,
+    // Xcode's compilation CAS is rooted in its per-user, versioned toolchain
+    // cache, not the project's -derivedDataPath. Fail closed if unavailable.
+    ...(hostCache.CACHE_ROOT ? {
+      COMPILATION_CACHE_CAS_PATH: join(hostCache.CACHE_ROOT, "CompilationCache.noindex"),
+    } : {}),
   };
 }
 
