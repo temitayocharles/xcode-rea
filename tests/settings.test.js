@@ -429,21 +429,26 @@ test("Xcode 27.1 simulator signing conditionals belong to app, not XCTest", () =
   const app = settingsFor({ ...base, targetName: "HelloXcode" }).settings;
   assert.equal(app.ENTITLEMENTS_ALLOWED, "NO");
   assert.equal(app.PROVISIONING_PROFILE_REQUIRED_YES_YES, "YES");
+  assert.equal(app.AGGREGATE_TRACKED_DOMAINS, "YES");
   const tests = settingsFor({ ...base, targetName: "HelloXcodeTests" }).settings;
   assert.equal(tests.ENTITLEMENTS_ALLOWED, undefined);
   assert.equal(tests.PROVISIONING_PROFILE_REQUIRED_YES_YES, undefined);
+  assert.equal(tests.AGGREGATE_TRACKED_DOMAINS, undefined);
   const overridden = settingsFor({ ...base, targetName: "HelloXcode",
     overrides: {
       ENTITLEMENTS_ALLOWED: "CUSTOM",
       PROVISIONING_PROFILE_REQUIRED_YES_YES: "CUSTOM",
+      AGGREGATE_TRACKED_DOMAINS: "CUSTOM",
     },
   }).settings;
   assert.equal(overridden.ENTITLEMENTS_ALLOWED, "CUSTOM");
   assert.equal(overridden.PROVISIONING_PROFILE_REQUIRED_YES_YES, "CUSTOM");
+  assert.equal(overridden.AGGREGATE_TRACKED_DOMAINS, "CUSTOM");
   const older = settingsFor({ ...base, targetName: "HelloXcode",
     xcodeVersion: "26.4" }).settings;
   assert.equal(older.ENTITLEMENTS_ALLOWED, undefined);
   assert.equal(older.PROVISIONING_PROFILE_REQUIRED_YES_YES, undefined);
+  assert.equal(older.AGGREGATE_TRACKED_DOMAINS, undefined);
 });
 
 test("XCTest defaults remain subordinate to explicit build-setting overrides", () => {
