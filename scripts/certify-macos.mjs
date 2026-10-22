@@ -7,7 +7,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { summarizeSettingsReport, summarizeValueDifferences, summarizeMissingReferenceValues } from "../src/compat/settings-summary.js";
+import { summarizeSettingsReport, summarizeValueDifferences, summarizeMissingReferenceValues, summarizeOpaqueMissingFields } from "../src/compat/settings-summary.js";
 
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const reportPath = join(root, "docs/verification/macOS-final.json");
@@ -48,6 +48,8 @@ if (process.platform !== "darwin") {
           console.log(summarizeValueDifferences(report, { limit: 45 }));
           console.log("\n== Selected missing reference values (non-sensitive only) ==");
           console.log(summarizeMissingReferenceValues(report, { limit: 35 }));
+          console.log("\n== Safe structural evidence for unresolved fields ==");
+          console.log(summarizeOpaqueMissingFields(report));
         }
         console.log(`\nFull report: ${reportPath}`);
       } catch (error) {
