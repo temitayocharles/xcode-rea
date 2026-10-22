@@ -89,6 +89,23 @@ test("platform condition selectors follow the selected SDK family", () => {
   assert.equal(device.__ARCHS__, undefined);
 });
 
+test("Xcode 27.1 simulator __ARCHS__ follows the effective architecture set", () => {
+  const projectPath = fixture("HelloXcode/HelloXcode.xcodeproj");
+  for (const targetName of ["HelloXcode", "HelloXcodeTests"]) {
+    const settings = settingsFor({ projectPath, targetName, xcodeVersion: "27.1" }).settings;
+    assert.equal(settings.__ARCHS__, "arm64 x86_64");
+    assert.equal(settings.__ARCHS__, settings.ARCHS);
+    const overridden = settingsFor({ projectPath, targetName, xcodeVersion: "27.1",
+      overrides: { ARCHS: "arm64" } }).settings;
+    assert.equal(overridden.__ARCHS__, "arm64");
+    const explicit = settingsFor({ projectPath, targetName, xcodeVersion: "27.1",
+      overrides: { ARCHS: "arm64", __ARCHS__: "custom" } }).settings;
+    assert.equal(explicit.__ARCHS__, "custom");
+    const older = settingsFor({ projectPath, targetName, xcodeVersion: "26.4" }).settings;
+    assert.equal(older.__ARCHS__, undefined);
+  }
+});
+
 test("measured cross-platform deployment defaults apply to Xcode 27.1 only", () => {
   const measured = xcode271ObservedDeploymentDefaults("27.1");
   assert.deepEqual(measured, {
