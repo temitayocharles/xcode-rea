@@ -228,7 +228,10 @@ export function summarizeOpaqueMissingFields(report) {
       const tokens = value.split(/\s+/).filter(Boolean);
       label = `protocol-count=${tokens.length}, unique=${new Set(tokens).size}, characters=${value.length}`;
     }
-    if (label !== null) out.push(`  ${row.key}: ${label}`);
+    if (label !== null) {
+      const target = /^[A-Za-z0-9_]+$/.test(row.target ?? "") ? `${row.target}.` : "";
+      out.push(`  ${target}${row.key}: ${label}`);
+    }
   }
   return out.join("\n");
 }
