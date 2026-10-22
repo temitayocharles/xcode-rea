@@ -191,6 +191,48 @@ export function redactedXcodeCachePathKind(value) {
   return "<other absolute filesystem path>";
 }
 
+/** Privacy-preserving semantic evidence for unresolved Xcode-owned fields. */
+export function summarizeOpaqueMissingFields(report) {
+  const gate = report?.gates?.find((g) => g.name === "settings: resolved build settings");
+  if (!Array.isArray(gate?.differences)) throw new Error("report lacks structured differences");
+  const out = ["UNRESOLVED FIELD SHAPES (no private paths or identifiers)"];
+  const seen = new Set();
+  for (const row of gate.differences) {
+    if (row.kind !== "missing" || typeof row.xcodebuild !== "string") continue;
+    if (seen.has(row.key)) continue;
+    seen.add(row.key);
+    const value = row.xcodebuild;
+    let label = null;
+    if (row.key === "__ARCHS__") {
+      // Architecture names are public identifiers. Unknown values remain opaque.
+      label = /^(?:arm64|arm64e|x86_64|i386|armv7)(?: (?:arm64|arm64e|x86_64|i386|armv7))*$/.test(value)
+        ? `architecture-list: ${value}` : `opaque (length ${value.length})`;
+    } else if (row.key === "AGGREGATE_TRACKED_DOMAINS") {
+      label = value === "YES" || value === "NO" || value === "" ?
+        `boolean-or-empty: ${value || "<empty>"}` : `opaque (length ${value.length})`;
+    } else if (row.key === "GENERATED_TEST_ENTRY_POINT_PATH") {
+      const filename = value.split("/").pop() ?? "";
+      // Reveal only known public SwiftBuild test-entry filenames.
+      label = /^(?:__SwiftTestingEntryPoint|TestingEntryPoint|TestEntryPoint|__XCTRunner|__XCTestEntryPoint)\.swift$/.test(filename)
+        ? `public-generated-filename: ${filename}` :
+          `generated-filename: <redacted> (extension ${/\.swift$/.test(filename) ? ".swift" : "other"})`;
+    } else if (row.key === "SDK_STAT_CACHE_DIR") {
+      // Directory depth and final system-standard component are safe to show.
+      const pieces = value.split("/").filter(Boolean);
+      const known = pieces.filter((p) =>
+        /^(?:Library|Developer|Xcode|DerivedData|Caches|SDKStatCaches\.noindex|com\.apple\.DeveloperTools)$/.test(p));
+      label = `absolute=${value.startsWith("/") ? "yes" : "no"}, depth=${pieces.length}, public-components=${known.join("/") || "<none>"}`;
+    } else if (row.key === "_BUILDABLE_SERIALIZATION_KEY") {
+      label = `opaque serialization token (length ${value.length})`;
+    } else if (row.key === "SWIFT_EMIT_CONST_VALUE_PROTOCOLS") {
+      const tokens = value.split(/\s+/).filter(Boolean);
+      label = `protocol-count=${tokens.length}, unique=${new Set(tokens).size}, characters=${value.length}`;
+    }
+    if (label !== null) out.push(`  ${row.key}: ${label}`);
+  }
+  return out.join("\n");
+}
+
 export function summarizeMissingReferenceValues(report, { limit = 35 } = {}) {
   if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
     throw new RangeError("limit must be an integer between 1 and 100");
