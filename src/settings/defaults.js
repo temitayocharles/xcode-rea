@@ -807,7 +807,8 @@ export function genericDefaults(context) {
     ...(productInfo.kind === "application" &&
       platform === "iphonesimulator" && String(xcodeVersion) === "27.1"
       ? { ENTITLEMENTS_ALLOWED: "NO",
-          PROVISIONING_PROFILE_REQUIRED_YES_YES: "YES" } : {}),
+          PROVISIONING_PROFILE_REQUIRED_YES_YES: "YES",
+          AGGREGATE_TRACKED_DOMAINS: "YES" } : {}),
     // XCTest product-level defaults must take precedence over generic SDK
     // values; target/xcconfig/CLI overrides still win in the resolver.
     ...(productInfo.kind === "unit-test" ? {
