@@ -170,7 +170,7 @@ test("Xcode PATH relationship to process PATH is summarized without disclosing e
     parentPath: "/private/custom/bin:/usr/bin:/bin",
   });
   assert.match(output, /parent-entries=3, same-prefix=0, same-suffix=3/);
-  assert.doesNotMatch(output, /private|custom\\/bin|\\/usr\\/bin/);
+  assert.doesNotMatch(output, /private|custom\/bin|\/usr\/bin/);
 });
 
 test("SDK stat cache digest and Xcode PATH diagnostics disclose structural classes only", () => {
