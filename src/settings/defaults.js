@@ -845,6 +845,10 @@ export function genericDefaults(context) {
     // cache, not the project's -derivedDataPath. Fail closed if unavailable.
     ...(hostCache.CACHE_ROOT ? {
       COMPILATION_CACHE_CAS_PATH: join(hostCache.CACHE_ROOT, "CompilationCache.noindex"),
+      // The Xcode 27.1 reference cache-directory shape terminates at the
+      // same versioned per-user Xcode root discovered for CACHE_ROOT.
+      ...(String(xcodeVersion) === "27.1" && platform === "iphonesimulator"
+        ? { SDK_STAT_CACHE_DIR: hostCache.CACHE_ROOT } : {}),
     } : {}),
   };
 }
