@@ -171,7 +171,7 @@ test("SDK stat cache digest and Xcode PATH diagnostics disclose structural class
   const output = summarizeOpaqueMissingFields(report);
   assert.match(output, /SDK_STAT_CACHE_PATH: sdk-family=iphonesimulator, sdk-version=27.1, sdk-build=26A987, digest-hex-length=32/);
   assert.match(output, /PATH: entries=5, classes=xcode-toolchain-bin,xcode-developer-bin,other,system-bin,system-bin/);
-  assert.doesNotMatch(output, /Users\\/private|abcdef0123456789|XcodeDefault.xctoolchain|local\\/bin/);
+  assert.doesNotMatch(output, /Users\/private|abcdef0123456789|XcodeDefault.xctoolchain|local\/bin/);
 });
 
 test("opaque missing-field evidence only prints public structural shapes", () => {
