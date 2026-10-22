@@ -231,8 +231,8 @@ export function summarizeOpaqueMissingFields(report) {
     } else if (row.key === "PATH") {
       const entries = value.split(":").filter(Boolean);
       const classified = entries.map((entry) => {
-        if (/\\/Toolchains\\/[^/]+\\/usr\\/bin$/.test(entry)) return "xcode-toolchain-bin";
-        if (/\\/Contents\\/Developer\\/usr\\/bin$/.test(entry)) return "xcode-developer-bin";
+        if (/\/Toolchains\/[^/]+\/usr\/bin$/.test(entry)) return "xcode-toolchain-bin";
+        if (/\/Contents\/Developer\/usr\/bin$/.test(entry)) return "xcode-developer-bin";
         if (entry === "/usr/bin" || entry === "/bin" ||
             entry === "/usr/sbin" || entry === "/sbin") return "system-bin";
         return "other";
