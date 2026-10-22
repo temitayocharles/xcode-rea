@@ -161,6 +161,18 @@ test("runtime cache directory and generated entry classifications hide local nam
   }
 });
 
+test("Xcode PATH relationship to process PATH is summarized without disclosing entries", () => {
+  const report = { gates: [{ name: "settings: resolved build settings", differences: [
+    { kind: "missing", target: "App", key: "PATH",
+      xcodebuild: "/private/xcode/usr/bin:/private/custom/bin:/usr/bin:/bin" },
+  ] }] };
+  const output = summarizeOpaqueMissingFields(report, {
+    parentPath: "/private/custom/bin:/usr/bin:/bin",
+  });
+  assert.match(output, /parent-entries=3, same-prefix=0, same-suffix=3/);
+  assert.doesNotMatch(output, /private|custom\\/bin|\\/usr\\/bin/);
+});
+
 test("SDK stat cache digest and Xcode PATH diagnostics disclose structural classes only", () => {
   const report = { gates: [{ name: "settings: resolved build settings", differences: [
     { kind: "missing", target: "HelloXcode", key: "SDK_STAT_CACHE_PATH",
