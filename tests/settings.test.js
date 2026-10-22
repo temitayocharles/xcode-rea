@@ -379,7 +379,7 @@ test("Xcode 27.1 conditional linker selectors are product scoped", () => {
   assert.equal(previous.PRODUCT_SPECIFIC_LDFLAGS, undefined);
 });
 
-test("compilation CAS location follows selected DerivedData, not the checkout or HOME", () => {
+test("compilation CAS is absent without authoritative Xcode host cache evidence", () => {
   const projectPath = fixture("HelloXcode/HelloXcode.xcodeproj");
   const selectedRoot = "/tmp/build-cache-session-2026";
   const project = loadProject(projectPath);
@@ -389,10 +389,9 @@ test("compilation CAS location follows selected DerivedData, not the checkout or
     derivedDataPath: selectedRoot, developerDir: "/Developer",
     arch: "arm64",
   }).settings;
-  assert.equal(resolved.COMPILATION_CACHE_CAS_PATH,
-    selectedRoot + "/CompilationCache.noindex");
-  assert.notEqual(resolved.COMPILATION_CACHE_CAS_PATH,
-    resolved.CACHE_ROOT + "/CompilationCache.noindex");
+  assert.equal(resolved.CACHE_ROOT, undefined);
+  assert.equal(resolved.COMPILATION_CACHE_CAS_PATH, undefined);
+  assert.equal(resolved.OBJROOT.startsWith(selectedRoot), true);
   const overridden = resolveBuildSettings({
     project, target, configuration: "Debug", platform: "iphonesimulator",
     derivedDataPath: selectedRoot, developerDir: "/Developer",
