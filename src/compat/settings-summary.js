@@ -224,7 +224,7 @@ export function summarizeOpaqueMissingFields(report) {
       label = `absolute=${value.startsWith("/") ? "yes" : "no"}, depth=${pieces.length}, public-components=${known.join("/") || "<none>"}`;
     } else if (row.key === "SDK_STAT_CACHE_PATH") {
       const base = value.split("/").pop() ?? "";
-      const match = /^([a-z]+)([0-9]+(?:\\.[0-9]+)*)-([A-Za-z0-9]+)-([a-f0-9]+)\\.sdkstatcache$/.exec(base);
+      const match = /^([a-z]+)([0-9]+(?:\.[0-9]+)*)-([A-Za-z0-9]+)-([a-f0-9]+)\.sdkstatcache$/.exec(base);
       label = match
         ? `sdk-family=${match[1]}, sdk-version=${match[2]}, sdk-build=${match[3]}, digest-hex-length=${match[4].length}`
         : `SDK stat-cache basename <redacted> (length ${base.length})`;
