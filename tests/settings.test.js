@@ -396,6 +396,17 @@ test("Xcode 27.1 conditional linker selectors are product scoped", () => {
   assert.equal(previous.PRODUCT_SPECIFIC_LDFLAGS, undefined);
 });
 
+test("SDK stat cache directory is absent without authoritative host cache", () => {
+  const projectPath = fixture("HelloXcode/HelloXcode.xcodeproj");
+  for (const targetName of ["HelloXcode", "HelloXcodeTests"]) {
+    const settings = settingsFor({ projectPath, targetName, xcodeVersion: "27.1" }).settings;
+    assert.equal(settings.SDK_STAT_CACHE_DIR, undefined);
+    const override = settingsFor({ projectPath, targetName, xcodeVersion: "27.1",
+      overrides: { SDK_STAT_CACHE_DIR: "/tmp/custom-cache" } }).settings;
+    assert.equal(override.SDK_STAT_CACHE_DIR, "/tmp/custom-cache");
+  }
+});
+
 test("compilation CAS is absent without authoritative Xcode host cache evidence", () => {
   const projectPath = fixture("HelloXcode/HelloXcode.xcodeproj");
   const selectedRoot = "/tmp/build-cache-session-2026";
