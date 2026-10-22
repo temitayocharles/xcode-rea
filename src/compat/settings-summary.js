@@ -192,7 +192,7 @@ export function redactedXcodeCachePathKind(value) {
 }
 
 /** Privacy-preserving semantic evidence for unresolved Xcode-owned fields. */
-export function summarizeOpaqueMissingFields(report) {
+export function summarizeOpaqueMissingFields(report, { parentPath = process.env.PATH ?? "" } = {}) {
   const gate = report?.gates?.find((g) => g.name === "settings: resolved build settings");
   if (!Array.isArray(gate?.differences)) throw new Error("report lacks structured differences");
   const out = ["UNRESOLVED FIELD SHAPES (no private paths or identifiers)"];
@@ -237,7 +237,18 @@ export function summarizeOpaqueMissingFields(report) {
             entry === "/usr/sbin" || entry === "/sbin") return "system-bin";
         return "other";
       });
-      label = `entries=${entries.length}, classes=${classified.join(",")}`;
+      const parentEntries = typeof parentPath === "string" ? parentPath.split(":").filter(Boolean) : [];
+      let commonSuffix = 0;
+      while (commonSuffix < Math.min(entries.length, parentEntries.length) &&
+          entries[entries.length - 1 - commonSuffix] === parentEntries[parentEntries.length - 1 - commonSuffix]) {
+        commonSuffix += 1;
+      }
+      let commonPrefix = 0;
+      while (commonPrefix < Math.min(entries.length, parentEntries.length) &&
+          entries[commonPrefix] === parentEntries[commonPrefix]) {
+        commonPrefix += 1;
+      }
+      label = `entries=${entries.length}, classes=${classified.join(",")}, parent-entries=${parentEntries.length}, same-prefix=${commonPrefix}, same-suffix=${commonSuffix}`;
     } else if (row.key === "_BUILDABLE_SERIALIZATION_KEY") {
       label = `opaque serialization token (length ${value.length})`;
     } else if (row.key === "SWIFT_EMIT_CONST_VALUE_PROTOCOLS") {
