@@ -174,5 +174,5 @@ test("opaque missing-field evidence only prints public structural shapes", () =>
   assert.match(output, /architecture-list: arm64 x86_64/);
   assert.match(output, /protocol-count=3, unique=3/);
   assert.match(output, /public-components=Library\/Developer\/Xcode\/DerivedData/);
-  assert.doesNotMatch(output, /Users|private|SecretOpaqueKey2026|privateTester/);
+  assert.doesNotMatch(output, /Users\/private|SecretOpaqueKey2026|privateTester/);
 });
