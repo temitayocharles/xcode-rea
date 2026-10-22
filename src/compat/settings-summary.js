@@ -222,6 +222,22 @@ export function summarizeOpaqueMissingFields(report) {
       const known = pieces.filter((p) =>
         /^(?:Library|Developer|Xcode|DerivedData|Caches|SDKStatCaches\.noindex|com\.apple\.DeveloperTools)$/.test(p));
       label = `absolute=${value.startsWith("/") ? "yes" : "no"}, depth=${pieces.length}, public-components=${known.join("/") || "<none>"}`;
+    } else if (row.key === "SDK_STAT_CACHE_PATH") {
+      const base = value.split("/").pop() ?? "";
+      const match = /^([a-z]+)([0-9]+(?:\\.[0-9]+)*)-([A-Za-z0-9]+)-([a-f0-9]+)\\.sdkstatcache$/.exec(base);
+      label = match
+        ? `sdk-family=${match[1]}, sdk-version=${match[2]}, sdk-build=${match[3]}, digest-hex-length=${match[4].length}`
+        : `SDK stat-cache basename <redacted> (length ${base.length})`;
+    } else if (row.key === "PATH") {
+      const entries = value.split(":").filter(Boolean);
+      const classified = entries.map((entry) => {
+        if (/\\/Toolchains\\/[^/]+\\/usr\\/bin$/.test(entry)) return "xcode-toolchain-bin";
+        if (/\\/Contents\\/Developer\\/usr\\/bin$/.test(entry)) return "xcode-developer-bin";
+        if (entry === "/usr/bin" || entry === "/bin" ||
+            entry === "/usr/sbin" || entry === "/sbin") return "system-bin";
+        return "other";
+      });
+      label = `entries=${entries.length}, classes=${classified.join(",")}`;
     } else if (row.key === "_BUILDABLE_SERIALIZATION_KEY") {
       label = `opaque serialization token (length ${value.length})`;
     } else if (row.key === "SWIFT_EMIT_CONST_VALUE_PROTOCOLS") {
