@@ -89,6 +89,23 @@ test("platform condition selectors follow the selected SDK family", () => {
   assert.equal(device.__ARCHS__, undefined);
 });
 
+test("Xcode 27.1 Swift constant-value protocol list matches independent tooling evidence", () => {
+  const projectPath = fixture("HelloXcode/HelloXcode.xcodeproj");
+  for (const targetName of ["HelloXcode", "HelloXcodeTests"]) {
+    const result = settingsFor({ projectPath, targetName, xcodeVersion: "27.1" }).settings;
+    const protocols = result.SWIFT_EMIT_CONST_VALUE_PROTOCOLS;
+    assert.equal(protocols.length, 346);
+    assert.equal(protocols.split(" ").length, 19);
+    assert.equal(new Set(protocols.split(" ")).size, 19);
+    assert.equal(protocols.startsWith("AnyResolverProviding AppEntity AppEnum AppExtension AppIntent "), true);
+    const custom = settingsFor({ projectPath, targetName, xcodeVersion: "27.1",
+      overrides: { SWIFT_EMIT_CONST_VALUE_PROTOCOLS: "CustomProtocol" } }).settings;
+    assert.equal(custom.SWIFT_EMIT_CONST_VALUE_PROTOCOLS, "CustomProtocol");
+    const older = settingsFor({ projectPath, targetName, xcodeVersion: "26.4" }).settings;
+    assert.equal(older.SWIFT_EMIT_CONST_VALUE_PROTOCOLS, undefined);
+  }
+});
+
 test("Xcode 27.1 simulator __ARCHS__ follows the effective architecture set", () => {
   const projectPath = fixture("HelloXcode/HelloXcode.xcodeproj");
   for (const targetName of ["HelloXcode", "HelloXcodeTests"]) {
