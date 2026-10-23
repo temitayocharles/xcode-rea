@@ -1,0 +1,3 @@
+# ModernSync
+
+Synchronized project fixture.

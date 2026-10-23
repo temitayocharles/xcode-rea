@@ -1,0 +1,16 @@
+node_modules/
+
+# Build output, anchored to the repository root only. Never use bare `build/`:
+# it would also match source directories such as src/engine and hide them.
+/build/
+/DerivedData/
+/dist/
+/coverage/
+/out/
+*.log
+.DS_Store
+
+# Generated from the local Xcode installation and REA runs.
+/evidence/
+/compat/evidence*.json
+/compat/xcode-spec-defaults.json

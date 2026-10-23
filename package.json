@@ -1,0 +1,50 @@
+{
+  "name": "xcode-lite",
+  "version": "0.1.0",
+  "description": "xcl — a lightweight, xcodebuild-compatible project and build engine with REA-based compatibility evidence.",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "xcl": "bin/xcl.mjs"
+  },
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "docs",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20.11"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "test:watch": "node --test --watch tests/*.test.js",
+    "demo": "node bin/xcl.mjs -project tests/fixtures/HelloXcode/HelloXcode.xcodeproj -list",
+    "demo:settings": "node bin/xcl.mjs -project tests/fixtures/HelloXcode/HelloXcode.xcodeproj -target HelloXcode -configuration Debug -sdk iphonesimulator -showBuildSettings",
+    "demo:plan": "node bin/xcl.mjs -project tests/fixtures/HelloXcode/HelloXcode.xcodeproj -target HelloXcode -configuration Debug -sdk iphonesimulator build --dry-run",
+    "certify:mac": "node scripts/certify-macos.mjs"
+  },
+  "keywords": [
+    "xcode",
+    "xcodebuild",
+    "pbxproj",
+    "ios",
+    "macos",
+    "swift",
+    "build-system",
+    "reverse-engineering",
+    "rea"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/temitayocharles/xcode-rea.git"
+  },
+  "homepage": "https://github.com/temitayocharles/xcode-rea#readme",
+  "bugs": {
+    "url": "https://github.com/temitayocharles/xcode-rea/issues"
+  }
+}

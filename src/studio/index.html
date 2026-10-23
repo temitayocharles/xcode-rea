@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>xcl studio</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0b0d12;
+    --panel: #12151d;
+    --panel-2: #171b25;
+    --border: #252b39;
+    --text: #e7eaf2;
+    --muted: #8b93a7;
+    --accent: #6ea8ff;
+    --accent-2: #8b7cff;
+    --green: #46d19a;
+    --amber: #f5b74b;
+    --red: #ff6b81;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: radial-gradient(1200px 600px at 20% -10%, #1a2133 0%, var(--bg) 55%);
+    color: var(--text);
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
+    min-height: 100vh;
+  }
+  header {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 22px; border-bottom: 1px solid var(--border);
+    background: rgba(10, 12, 18, .72); backdrop-filter: blur(12px);
+    position: sticky; top: 0; z-index: 5;
+  }
+  .logo {
+    width: 30px; height: 30px; border-radius: 9px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: grid; place-items: center; font-weight: 800; color: #0b0d12; font-size: 15px;
+  }
+  h1 { font-size: 15px; margin: 0; letter-spacing: .2px; }
+  .sub { color: var(--muted); font-size: 12px; }
+  .spacer { flex: 1; }
+  .badge {
+    border: 1px solid var(--border); background: var(--panel-2); color: var(--muted);
+    border-radius: 999px; padding: 4px 10px; font-size: 12px; white-space: nowrap;
+  }
+  .app { display: grid; grid-template-columns: 260px minmax(0, 1fr); min-height: calc(100vh - 63px); }
+  aside { border-right: 1px solid var(--border); padding: 16px 12px; background: rgba(18,21,29,.6); }
+  .aside-title { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .9px; margin: 4px 8px 10px; }
+  .target {
+    display: block; width: 100%; text-align: left; border: 1px solid transparent;
+    background: transparent; color: var(--text); padding: 9px 10px; border-radius: 9px;
+    cursor: pointer; margin-bottom: 4px; font: inherit;
+  }
+  .target:hover { background: var(--panel); }
+  .target.active { background: linear-gradient(180deg, #1b2436, #151a26); border-color: #2d3a55; }
+  .target .name { font-weight: 600; }
+  .target .kind { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  main { padding: 20px 24px 48px; min-width: 0; }
+  .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 18px; }
+  label.field { display: flex; flex-direction: column; gap: 4px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; }
+  select, input[type="search"] {
+    background: var(--panel); color: var(--text); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 10px; font: inherit; min-width: 150px; outline: none;
+  }
+  select:focus, input:focus { border-color: #3d5b8f; box-shadow: 0 0 0 3px rgba(110,168,255,.12); }
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 18px; }
+  .tab {
+    background: transparent; border: none; color: var(--muted); font: inherit;
+    padding: 10px 14px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px;
+  }
+  .tab.active { color: var(--text); border-bottom-color: var(--accent); }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 18px; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+  .card .k { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .7px; }
+  .card .v { margin-top: 6px; font-weight: 600; overflow-wrap: anywhere; }
+  .card .v.mono { font-family: var(--mono); font-size: 12px; font-weight: 500; }
+  .section-title { font-size: 13px; margin: 22px 0 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; }
+  table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid #1d2330; vertical-align: top; }
+  th { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; background: var(--panel-2); position: sticky; top: 0; }
+  tr:last-child td { border-bottom: none; }
+  td.key { font-family: var(--mono); color: #b9c6e6; width: 38%; overflow-wrap: anywhere; }
+  td.value { font-family: var(--mono); font-size: 12px; overflow-wrap: anywhere; }
+  td.value.empty { color: #5c657a; font-style: italic; }
+  .step { border: 1px solid var(--border); background: var(--panel); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; }
+  .step-head { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .step-title { font-weight: 600; }
+  .step-kind {
+    font-size: 10px; text-transform: uppercase; letter-spacing: .7px; padding: 2px 7px;
+    border-radius: 999px; border: 1px solid #2d3a55; color: var(--accent); background: #142033;
+  }
+  .step-kind.compile { color: var(--amber); border-color: #4a3a1d; background: #221a0d; }
+  .step-kind.link { color: var(--green); border-color: #1d4536; background: #0f241d; }
+  .step-kind.sign { color: #d7a6ff; border-color: #3d2a52; background: #1c1226; }
+  .step-kind.resource { color: #66d9e8; border-color: #1d4148; background: #0d2226; }
+  .cmd { font-family: var(--mono); font-size: 12px; color: #a7b3cc; margin-top: 8px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .muted { color: var(--muted); }
+  .empty-state { padding: 40px; text-align: center; color: var(--muted); border: 1px dashed var(--border); border-radius: 12px; }
+  .warning { border-left: 3px solid var(--amber); background: #1d1709; padding: 8px 12px; border-radius: 6px; margin: 8px 0; color: #e7d4a8; font-size: 13px; }
+  .error { border-left: 3px solid var(--red); background: #210d12; padding: 8px 12px; border-radius: 6px; margin: 8px 0; color: #f3b6c0; }
+  .pillrow { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .pill { font-size: 11px; border: 1px solid var(--border); border-radius: 999px; padding: 2px 8px; color: var(--muted); }
+  code { font-family: var(--mono); }
+  @media (max-width: 800px) {
+    .app { grid-template-columns: 1fr; }
+    aside { border-right: none; border-bottom: 1px solid var(--border); }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">x</div>
+  <div>
+    <h1>xcl studio</h1>
+    <div class="sub" id="project-sub">loading project…</div>
+  </div>
+  <div class="spacer"></div>
+  <div class="badge" id="object-version">—</div>
+  <div class="badge" id="toolchain">toolchain…</div>
+</header>
+<div class="app">
+  <aside>
+    <div class="aside-title">Targets</div>
+    <div id="targets"></div>
+    <div class="aside-title" style="margin-top:18px">Schemes</div>
+    <div id="schemes" class="muted" style="font-size:12px;padding:0 8px"></div>
+  </aside>
+  <main>
+    <div class="toolbar">
+      <label class="field">Configuration <select id="config"></select></label>
+      <label class="field">Platform <select id="platform">
+        <option value="macosx">macOS</option>
+        <option value="iphonesimulator">iOS Simulator</option>
+        <option value="iphoneos">iOS Device</option>
+        <option value="appletvos">tvOS</option>
+        <option value="watchos">watchOS</option>
+      </select></label>
+      <label class="field">Architecture <select id="arch">
+        <option value="arm64">arm64</option>
+        <option value="x86_64">x86_64</option>
+      </select></label>
+    </div>
+    <div class="tabs">
+      <button class="tab active" data-tab="overview">Overview</button>
+      <button class="tab" data-tab="settings">Build settings</button>
+      <button class="tab" data-tab="plan">Build plan</button>
+    </div>
+    <section id="overview"></section>
+    <section id="settings" hidden>
+      <input type="search" id="search" placeholder="Filter settings…" style="width:100%;margin-bottom:12px">
+      <div id="settings-body"></div>
+    </section>
+    <section id="plan" hidden><div id="plan-body"></div></section>
+  </main>
+</div>
+<script>
+const state = { project: null, target: null, tab: "overview", settings: null, plan: null, error: null };
+
+const $ = (id) => document.getElementById(id);
+const esc = (value) => String(value ?? "");
+
+function currentConfig() { return $("config").value; }
+function currentPlatform() { return $("platform").value; }
+function currentArch() { return $("arch").value; }
+
+async function api(path) {
+  const response = await fetch(path);
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || response.statusText);
+  }
+  return response.json();
+}
+
+function renderSidebar() {
+  const targets = $("targets");
+  targets.innerHTML = "";
+  for (const target of state.project.targets) {
+    const button = document.createElement("button");
+    button.className = "target" + (target.name === state.target ? " active" : "");
+    button.innerHTML = `<div class="name"></div><div class="kind"></div>`;
+    button.querySelector(".name").textContent = target.name;
+    button.querySelector(".kind").textContent = target.productKind;
+    button.addEventListener("click", () => {
+      state.target = target.name;
+      renderSidebar();
+      loadSelection();
+    });
+    targets.appendChild(button);
+  }
+  const schemes = $("schemes");
+  schemes.textContent = state.project.schemes.length ? state.project.schemes.join(", ") : "none";
+}
+
+function renderOverview() {
+  const target = state.project.targets.find((entry) => entry.name === state.target);
+  const settings = state.settings?.settings ?? {};
+  const plan = state.plan;
+  const cards = [
+    ["Product", plan?.product ?? target.productPath, true],
+    ["Product type", target.productType],
+    ["Configuration", `${currentConfig()}${settings.EFFECTIVE_PLATFORM_NAME ?? ""}`],
+    ["SDK", settings.SDK_NAME || `${currentPlatform()} (not installed)`],
+    ["Architecture", `${currentArch()} · ${settings.ONLY_ACTIVE_ARCH === "YES" ? "active only" : "standard"}`],
+    ["Swift", `language mode ${settings.SWIFT_VERSION ?? "—"} · ${settings.SWIFT_OPTIMIZATION_LEVEL ?? "—"}`],
+    ["Deployment target", settings.DEPLOYMENT_TARGET || "—"],
+    ["Bundle identifier", settings.PRODUCT_BUNDLE_IDENTIFIER || "—"],
+  ];
+  const warnings = [...(state.settings?.warnings ?? []), ...(plan?.warnings ?? [])];
+  $("overview").innerHTML = `
+    <div class="cards">${cards.map(([k, v, mono]) => `
+      <div class="card"><div class="k">${esc(k)}</div><div class="v ${mono ? "mono" : ""}">${esc(v || "—")}</div></div>`).join("")}
+    </div>
+    ${warnings.map((warning) => `<div class="warning">${esc(warning)}</div>`).join("")}
+    <div class="section-title">Sources (${target.sources.length})</div>
+    ${target.sources.length ? `<table><tbody>${target.sources.map((path) => `<tr><td class="value">${esc(path)}</td></tr>`).join("")}</tbody></table>` : `<div class="empty-state">No compiled sources</div>`}
+    <div class="section-title">Resources (${target.resources.length})</div>
+    ${target.resources.length ? `<table><tbody>${target.resources.map((entry) => `<tr><td class="value">${esc(entry.path)}</td><td class="muted">${esc(entry.kind)}</td></tr>`).join("")}</tbody></table>` : `<div class="empty-state">No resources</div>`}
+  `;
+}
+
+function renderSettings() {
+  const all = state.settings?.settings ?? {};
+  const filter = ($("search").value || "").toLowerCase();
+  const entries = Object.entries(all).filter(([key, value]) =>
+    !filter || key.toLowerCase().includes(filter) || String(value).toLowerCase().includes(filter));
+  $("settings-body").innerHTML = entries.length
+    ? `<table><thead><tr><th>Setting</th><th>Resolved value</th></tr></thead><tbody>${entries.map(([key, value]) => `
+        <tr><td class="key">${esc(key)}</td><td class="value ${value === "" ? "empty" : ""}">${esc(value === "" ? "(empty)" : value)}</td></tr>`).join("")}</tbody></table>`
+    : `<div class="empty-state">No settings match “${esc(filter)}”</div>`;
+}
+
+function renderPlan() {
+  const plan = state.plan;
+  if (!plan) {
+    $("plan-body").innerHTML = `<div class="empty-state">No plan available</div>`;
+    return;
+  }
+  $("plan-body").innerHTML = `
+    <div class="cards">
+      <div class="card"><div class="k">Steps</div><div class="v">${plan.steps.length}</div></div>
+      <div class="card"><div class="k">Target triple</div><div class="v mono">${esc(plan.triple)}</div></div>
+      <div class="card"><div class="k">Product</div><div class="v mono">${esc(plan.product)}</div></div>
+    </div>
+    ${plan.warnings.map((warning) => `<div class="warning">${esc(warning)}</div>`).join("")}
+    ${plan.steps.map((step, index) => `
+      <div class="step">
+        <div class="step-head">
+          <span class="step-kind ${esc(step.kind)}">${esc(step.kind)}</span>
+          <span class="step-title">${index + 1}. ${esc(step.title)}</span>
+        </div>
+        <div class="cmd">${esc(step.display)}</div>
+        ${step.description ? `<div class="muted" style="font-size:12px;margin-top:6px">${esc(step.description)}</div>` : ""}
+      </div>`).join("")}
+  `;
+}
+
+async function loadSelection() {
+  const target = state.project.targets.find((entry) => entry.name === state.target);
+  if (!target) return;
+  state.error = null;
+  const query = new URLSearchParams({
+    target: state.target,
+    configuration: currentConfig(),
+    platform: currentPlatform(),
+    arch: currentArch(),
+  }).toString();
+  try {
+    const [settings, plan] = await Promise.all([
+      api(`/api/settings?${query}`),
+      api(`/api/plan?${query}`),
+    ]);
+    state.settings = settings;
+    state.plan = plan;
+  } catch (error) {
+    state.error = error.message;
+    state.settings = { settings: {}, warnings: [error.message] };
+    state.plan = null;
+  }
+  renderOverview();
+  renderSettings();
+  renderPlan();
+}
+
+function switchTab(tab) {
+  state.tab = tab;
+  for (const button of document.querySelectorAll(".tab")) {
+    button.classList.toggle("active", button.dataset.tab === tab);
+  }
+  for (const section of ["overview", "settings", "plan"]) {
+    $(section).hidden = section !== tab;
+  }
+}
+
+document.querySelectorAll(".tab").forEach((button) => {
+  button.addEventListener("click", () => switchTab(button.dataset.tab));
+});
+$("search").addEventListener("input", renderSettings);
+for (const id of ["config", "platform", "arch"]) {
+  $(id).addEventListener("change", loadSelection);
+}
+
+(async function boot() {
+  try {
+    const project = await api("/api/project");
+    state.project = project;
+    $("project-sub").textContent = `${project.name} · ${project.path}`;
+    $("object-version").textContent = `objectVersion ${project.objectVersion}`;
+    $("toolchain").textContent = project.toolchain.found
+      ? (project.toolchain.version ? `Xcode ${project.toolchain.version}` : "Command Line Tools")
+      : "no local toolchain";
+    for (const configuration of project.configurations) {
+      const option = document.createElement("option");
+      option.value = configuration;
+      option.textContent = configuration;
+      $("config").appendChild(option);
+    }
+    $("config").value = project.defaultConfiguration;
+    $("platform").value = project.defaultPlatform;
+    $("arch").value = project.defaultArch;
+    state.target = project.targets[0]?.name ?? null;
+    renderSidebar();
+    await loadSelection();
+  } catch (error) {
+    $("overview").innerHTML = `<div class="error">${esc(error.message)}</div>`;
+  }
+})();
+</script>
+</body>
+</html>

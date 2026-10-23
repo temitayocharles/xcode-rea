@@ -1,0 +1,2 @@
+OTHER_LDFLAGS = $(inherited) -lrelease
+SWIFT_COMPILATION_MODE = wholemodule
