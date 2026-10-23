@@ -588,6 +588,16 @@ export function genericDefaults(context) {
     DEVELOPER_DIR: developerDir ?? "",
     ...xcodeVersionSettings(xcodeVersion, xcodeBuild),
     ...xcode271ObservedDeploymentDefaults(xcodeVersion),
+    // Observed Xcode 27.1 iOS Simulator Swift constant-extraction protocol set.
+    // The complete public protocol list has 19 unique identifiers / 346 chars
+    // and matches independent Swift compiler App Intents tooling evidence.
+    ...(String(xcodeVersion) === "27.1" && platform === "iphonesimulator" ? {
+      SWIFT_EMIT_CONST_VALUE_PROTOCOLS:
+        "AnyResolverProviding AppEntity AppEnum AppExtension AppIntent AppIntentsPackage " +
+        "AppShortcutProviding AppShortcutsProvider AppUnionValue AppUnionValueCasesProviding " +
+        "DynamicOptionsProvider EntityQuery ExtensionPointDefining IntentValueQuery Resolver " +
+        "TransientEntity _AssistantIntentsProvider _GenerativeFunctionExtractable _IntentValueRepresentable",
+    } : {}),
     TOOLCHAIN_DIR: developerDir ? join(developerDir, "Toolchains", "XcodeDefault.xctoolchain") : "",
     DT_TOOLCHAIN_DIR: "$(TOOLCHAIN_DIR)",
     DEVELOPER_FRAMEWORKS_DIR_QUOTED: "$(DEVELOPER_FRAMEWORKS_DIR)",
